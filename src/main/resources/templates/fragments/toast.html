@@ -1,0 +1,38 @@
+<div th:fragment="toast">
+
+    <!-- SUCCESS -->
+    <div th:if="${success}"
+         class="toast fade align-items-center text-bg-success border-0 position-fixed top-0 end-0 m-3"
+         role="alert">
+
+        <div class="d-flex">
+            <div class="toast-body" th:text="${success}"></div>
+        </div>
+
+    </div>
+
+    <!-- ERROR -->
+    <div th:if="${error}"
+         class="toast fade align-items-center text-bg-danger border-0 position-fixed top-0 end-0 m-3"
+         role="alert">
+
+        <div class="d-flex">
+            <div class="toast-body" th:text="${error}"></div>
+        </div>
+
+    </div>
+
+    <!-- ✅ Script INSIDE fragment -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll('.toast').forEach(toastEl => {
+                let toast = new bootstrap.Toast(toastEl, {
+                    delay: 3000,
+                    autohide: true
+                });
+                toast.show();
+            });
+        });
+    </script>
+
+</div>

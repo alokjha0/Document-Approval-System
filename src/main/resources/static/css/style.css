@@ -1,0 +1,21 @@
+body{
+    background:#F1F5F9;
+}
+
+.card{
+    border:none;
+}
+
+.card-header{
+    background:#0EA5E9;
+    color:white;
+}
+
+.btn-primary{
+    background:#0EA5E9;
+    border:none;
+}
+
+.btn-primary:hover{
+    background:#0284C7;
+}

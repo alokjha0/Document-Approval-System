@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+	<title>Departments</title>
+
+	<!-- CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+	<!-- JS -->
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+	<link rel="stylesheet" th:href="@{/css/style.css}">
+
+</head>
+
+<body>
+
+	<div th:replace="~{fragments/header :: header}"></div>
+
+	<div th:replace="~{fragments/toast :: toast}"></div>
+
+	<div class="container mt-4">
+
+		<!-- CREATE DEPARTMENT -->
+
+		<div class="card shadow mb-4">
+
+			<div class="card-header">
+
+				<h5 class="mb-0">
+
+					<span th:text="${department.id == null}
+				 ? 'Create Department'
+				 : 'Update Department'">
+					</span>
+
+				</h5>
+
+			</div>
+
+			<div class="card-body">
+
+				<form th:action="${department.id == null}
+			           ? @{/departments/save}
+			           : @{/departments/update/{id}(id=${department.id})}" th:object="${department}" method="post">
+
+					<div class="row">
+
+						<div class="col-md-10">
+
+							<input type="text" class="form-control" th:field="*{departmentName}"
+								placeholder="Enter Department Name*" required>
+
+							<small class="text-danger" th:if="${#fields.hasErrors('departmentName')}"
+								th:errors="*{departmentName}">
+							</small>
+
+						</div>
+
+						<div class="col-md-2">
+
+							<button type="submit" class="btn btn-primary w-100">
+
+								<span th:text="${department.id == null}
+								 ? 'Save'
+								 : 'Update'">
+								</span>
+
+							</button>
+
+						</div>
+
+					</div>
+
+				</form>
+
+			</div>
+
+		</div>
+
+
+		<!-- TABLE -->
+
+		<div class="card shadow">
+
+
+			<div class="card-header d-flex justify-content-between align-items-center">
+			    <h5 class="mb-0">Department List</h5>
+			    <form method="get" th:action="@{/departments}" class="d-flex" style="max-width: 300px;">
+			        <input type="text" name="keyword" class="form-control me-2" th:value="${keyword}" placeholder="Search Department">
+			        <button class="btn btn-primary">Search</button>
+			    </form>
+			</div>
+
+			<div class="card-body">
+
+				<table class="table table-bordered table-hover">
+
+					<thead>
+
+						<tr>
+
+							<th>ID</th>
+							<th>Department Name</th>
+							<th>Actions</th>
+
+						</tr>
+
+					</thead>
+
+					<tbody>
+
+						<tr th:each="department : ${departments.content}">
+
+							<td th:text="${department.id}">
+							</td>
+
+							<td th:text="${department.departmentName}">
+							</td>
+
+							<td>
+
+								<a th:href="@{/departments/edit/{id}(id=${department.id})}"
+									class="btn btn-warning btn-sm">
+
+									Edit
+
+								</a>
+
+								<a th:href="@{/departments/delete/{id}(id=${department.id})}"
+									class="btn btn-danger btn-sm" onclick="return confirm('Delete Department ?')">
+
+									Delete
+
+								</a>
+
+							</td>
+
+						</tr>
+
+					</tbody>
+
+				</table>
+
+				<!-- PAGINATION -->
+
+				<nav>
+
+					<ul class="pagination">
+
+						<li class="page-item" th:classappend="${departments.first} ? 'disabled'">
+
+							<a class="page-link"
+								th:href="@{/departments(page=${departments.number-1},keyword=${keyword})}">
+
+								Previous
+
+							</a>
+
+						</li>
+
+						<li class="page-item" th:each="i : ${#numbers.sequence(0,departments.totalPages-1)}">
+
+							<a class="page-link" th:text="${i+1}"
+								th:href="@{/departments(page=${i},keyword=${keyword})}">
+
+							</a>
+
+						</li>
+
+						<li class="page-item" th:classappend="${departments.last} ? 'disabled'">
+
+							<a class="page-link"
+								th:href="@{/departments(page=${departments.number+1},keyword=${keyword})}">
+
+								Next
+
+							</a>
+
+						</li>
+
+					</ul>
+
+				</nav>
+
+			</div>
+
+		</div>
+
+	</div>
+
+</body>
+
+</html>

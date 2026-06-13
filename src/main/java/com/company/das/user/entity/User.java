@@ -31,13 +31,19 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private UserRole role;
+
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	@Builder.Default
+	private UserRole role = UserRole.EMPLOYEE;
+
+
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
 
+    @Builder.Default
     @Column(nullable = false)
     private Boolean isDeleted = false;
 

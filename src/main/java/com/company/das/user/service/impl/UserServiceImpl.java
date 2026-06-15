@@ -9,6 +9,7 @@ import com.company.das.user.repository.UserRepository;
 import com.company.das.user.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void saveUser(UserDto dto) {
@@ -45,7 +47,7 @@ public class UserServiceImpl implements UserService {
                 .empId(empId)
                 .name(dto.getName().trim())
                 .email(email)
-                .password(dto.getPassword().trim())
+                .password(passwordEncoder.encode(dto.getPassword().trim()))
                 .role(dto.getRole())
                 .department(department)
                 .build();
@@ -85,7 +87,15 @@ public class UserServiceImpl implements UserService {
         user.setEmpId(newEmpId);
         user.setName(dto.getName().trim());
         user.setEmail(newEmail);
-        user.setPassword(dto.getPassword().trim());
+        if(dto.getPassword() != null
+                && !dto.getPassword().trim().isEmpty()) {
+
+            user.setPassword(
+                    passwordEncoder.encode(
+                            dto.getPassword().trim()
+                    )
+            );
+        }
         user.setRole(dto.getRole());
         user.setDepartment(department);
 

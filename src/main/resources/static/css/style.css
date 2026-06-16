@@ -1,21 +1,52 @@
-body{
-    background:#F1F5F9;
+body {
+	background: #F1F5F9;
 }
 
-.card{
-    border:none;
+.card {
+	border: none;
 }
 
-.card-header{
-    background:#0EA5E9;
+.card-header {
+	background: #0EA5E9;
+	color: white;
+}
+
+.btn-primary {
+	background: #0EA5E9;
+	border: none;
+}
+
+.btn-primary:hover {
+	background: #0284C7;
+}
+.logout-btn{
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+.logout-icon{
+    width: 28px;
+    height: 28px;
+    filter: brightness(0) invert(1);
+    transition: 0.3s;
+}
+
+.logout-icon:hover{
+    transform: scale(1.1);
+}
+.breadcrumb-title{
     color:white;
+    font-size:1.2rem;
+    font-weight:500;
 }
 
-.btn-primary{
-    background:#0EA5E9;
-    border:none;
+.breadcrumb-link{
+    color:white;
+    text-decoration:none;
 }
 
-.btn-primary:hover{
-    background:#0284C7;
+.breadcrumb-link:hover{
+    text-decoration:underline;
 }

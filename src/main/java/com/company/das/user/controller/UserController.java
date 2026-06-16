@@ -1,6 +1,5 @@
 package com.company.das.user.controller;
 
-import com.company.das.department.dto.DepartmentDto;
 import com.company.das.department.service.DepartmentService;
 import com.company.das.user.dto.UserDto;
 import com.company.das.user.entity.UserRole;
@@ -8,6 +7,7 @@ import com.company.das.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/users")
+@PreAuthorize("hasRole('ADMIN')")
 @RequiredArgsConstructor
 public class UserController {
 

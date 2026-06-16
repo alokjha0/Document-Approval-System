@@ -1,5 +1,6 @@
 package com.company.das.user.repository;
 
+import com.company.das.department.entity.Department;
 import com.company.das.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -11,16 +12,16 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByEmailAndIsDeletedFalse(String email);
 	
-    // ✅ Get all non-deleted users (pagination)
+    // Get all non-deleted users (pagination)
     Page<User> findByIsDeletedFalse(Pageable pageable);
 
-    // ✅ Search by name (case-insensitive + non-deleted)
+    // Search by name (case-insensitive + non-deleted)
     Page<User> findByNameContainingIgnoreCaseAndIsDeletedFalse(String keyword, Pageable pageable);
 
-    // ✅ Get single user (non-deleted)
+    //Get single user (non-deleted)
     Optional<User> findByIdAndIsDeletedFalse(Long id);
 
-    // ✅ Duplicate checks
+    // Duplicate checks
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCaseAndIsDeletedFalse(String email);
@@ -28,4 +29,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByEmpIdIgnoreCase(String empId);
 
     boolean existsByEmpIdIgnoreCaseAndIsDeletedFalse(String empId);
+    
+    boolean existsByDepartmentAndIsDeletedFalse(Department department);
 }

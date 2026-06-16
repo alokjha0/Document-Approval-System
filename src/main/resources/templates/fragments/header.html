@@ -1,21 +1,61 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-
+	<link rel="stylesheet" th:href="@{/css/style.css}">
 <body>
 
-<div th:fragment="header">
+<div th:fragment="header(pageTitle)">
 
     <nav class="navbar navbar-expand-lg navbar-dark"
          style="background:#0EA5E9;">
 
         <div class="container-fluid">
 
-            <a class="navbar-brand fw-bold d-flex justify-content-center w-100"
-               href="#">
+			<div class="breadcrumb-title">
 
-                Document Approval System
+			    <a th:href="@{/dashboard}"
+			       class="breadcrumb-link">
 
-            </a>
+			        Dashboard
+
+			    </a>
+
+			    <span th:if="${pageTitle != 'Dashboard'}">
+
+			        > <span th:text="${pageTitle}"></span>
+
+			    </span>
+
+			</div>
+
+            <div class="d-flex align-items-center">
+				<span class="text-white me-3">
+
+				       <i class="bi bi-person-circle"></i>
+
+				       <span sec:authentication="name"></span>
+
+				   </span>
+
+                <form th:action="@{/logout}"
+                      method="post">
+
+                    <input type="hidden"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}" />
+
+                    <button type="submit"
+                            class="logout-btn"
+                            title="Logout">
+
+                        <img th:src="@{/images/logout.svg}"
+                             class="logout-icon"
+                             alt="Logout">
+
+                    </button>
+
+                </form>
+
+            </div>
 
         </div>
 
@@ -24,4 +64,5 @@
 </div>
 
 </body>
+
 </html>

@@ -5,6 +5,8 @@ import com.company.das.department.dto.DepartmentDto;
 import com.company.das.department.entity.Department;
 import com.company.das.department.repository.DepartmentRepository;
 import com.company.das.department.service.DepartmentService;
+import com.company.das.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.time.LocalDateTime;
 public class DepartmentServiceImpl implements DepartmentService {
 
 	private final DepartmentRepository departmentRepository;
+	private final UserRepository userRepository;
 
 	@Override
 	public void saveDepartment(DepartmentDto dto) {
@@ -41,7 +44,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 		String newName = dto.getDepartmentName().trim();
 
 		if (!department.getDepartmentName().equalsIgnoreCase(newName)
-				&& departmentRepository.existsByDepartmentNameIgnoreCase(newName)) {
+				&& departmentRepository.existsByDepartmentNameIgnoreCaseAndIsDeletedFalse(newName)) {
 
 			throw new RuntimeException("Department already exists");
 		}
@@ -54,13 +57,21 @@ public class DepartmentServiceImpl implements DepartmentService {
 	@Override
 	public void deleteDepartment(Long id) {
 
-		Department department = departmentRepository.findByIdAndIsDeletedFalse(id)
-				.orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+	    Department department = departmentRepository.findByIdAndIsDeletedFalse(id)
+	            .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
-		department.setIsDeleted(true);
-		department.setDeletedAt(LocalDateTime.now());
+	    boolean userExists =
+	            userRepository.existsByDepartmentAndIsDeletedFalse(department);
 
-		departmentRepository.save(department);
+	    if (userExists) {
+	        throw new IllegalStateException(
+	                "Cannot delete department. Users are associated with this department.");
+	    }
+
+	    department.setIsDeleted(true);
+	    department.setDeletedAt(LocalDateTime.now());
+
+	    departmentRepository.save(department);
 	}
 
 	@Override

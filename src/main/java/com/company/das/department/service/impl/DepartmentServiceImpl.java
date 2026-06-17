@@ -12,6 +12,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -101,5 +102,23 @@ public class DepartmentServiceImpl implements DepartmentService {
 
 		return departments.map(department -> DepartmentDto.builder().id(department.getId())
 				.departmentName(department.getDepartmentName()).build());
+	}
+	
+	@Override
+	public List<DepartmentDto> getAllDepartments() {
+
+	    return departmentRepository
+	            .findByIsDeletedFalse()
+	            .stream()
+	            .map(department ->
+
+	                    DepartmentDto.builder()
+	                            .id(department.getId())
+	                            .departmentName(
+	                                    department.getDepartmentName())
+	                            .build()
+
+	            )
+	            .toList();
 	}
 }

@@ -1,6 +1,9 @@
 package com.company.das.department.service;
 
 import com.company.das.department.dto.DepartmentDto;
+
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 
 public interface DepartmentService {
@@ -14,4 +17,6 @@ public interface DepartmentService {
 	DepartmentDto getDepartmentById(Long id);
 
 	Page<DepartmentDto> getDepartments(String keyword, int page, int size);
+	
+	List<DepartmentDto> getAllDepartments();
 }

@@ -1,0 +1,24 @@
+package com.company.das.common.enums;
+
+public enum AuditAction {
+
+    DOCUMENT_CREATED,
+    
+    DOCUMENT_UPDATED,
+
+    DOCUMENT_SUBMITTED,
+
+    DOCUMENT_ASSIGNED,
+
+    REVIEW_APPROVED,
+
+    INFO_REQUESTED,
+
+    INFO_PROVIDED,
+
+    DOCUMENT_APPROVED,
+
+    DOCUMENT_REJECTED,
+
+    DOCUMENT_ARCHIVED
+}

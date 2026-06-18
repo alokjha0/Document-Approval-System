@@ -6,6 +6,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
@@ -27,4 +28,57 @@ public class WorkflowController {
 
         return "workflow/reviewer-dashboard";
     }
+    
+    @GetMapping("/review/{taskId}")
+    public String reviewDocument(
+            @PathVariable Long taskId,
+            Authentication authentication,
+            Model model) {
+
+        model.addAttribute(
+                "document",
+                workflowService
+                        .getDocumentForReview(
+                                taskId,
+                                authentication.getName()));
+
+        return "workflow/review-document";
+    }
+    
+    @GetMapping("/reviewer/approve/{taskId}")
+    public String approveByReviewer(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.approveByReviewer(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/reviewer";
+    }
+    
+    @GetMapping("/reviewer/request-info/{taskId}")
+    public String requestInfo(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.requestInfo(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/reviewer";
+    }
+    
+    @GetMapping("/reviewer/reject/{taskId}")
+    public String rejectDocument(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.rejectDocument(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/reviewer";
+    }
+    
 }

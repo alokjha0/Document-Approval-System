@@ -26,4 +26,9 @@ public interface DocumentService {
             DocumentDto documentDto,
             String loggedInUserEmail
     );
+    
+    void respondToInfoRequest(
+            Long documentId,
+            String email
+    );
 }

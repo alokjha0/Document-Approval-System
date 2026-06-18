@@ -7,23 +7,23 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ReviewTaskDto {
+public class ReviewDocumentDto {
 
     private Long taskId;
 
     private Long documentId;
-    
-    private Long workflowInstanceId;
 
     private String documentNumber;
 
     private String title;
-    
-    private String requestorDepartment;
+
+    private String description;
 
     private String submittedBy;
 
-    private String stage;
+    private String requestorDepartment;
 
     private String status;
+
+    private String currentStage;
 }

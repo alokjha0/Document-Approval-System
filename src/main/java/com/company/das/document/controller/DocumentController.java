@@ -87,4 +87,16 @@ public class DocumentController {
 
 		return "redirect:/documents";
 	}
+	
+	@GetMapping("/respond/{id}")
+	public String respondToInfoRequest(
+	        @PathVariable Long id,
+	        Authentication authentication) {
+
+	    documentService.respondToInfoRequest(
+	            id,
+	            authentication.getName());
+
+	    return "redirect:/documents";
+	}
 }

@@ -28,6 +28,8 @@ public class DocumentDto {
     private Long departmentId;
     
     private String status;
+    
+    private String currentStage;
 
     private String departmentName;
 }

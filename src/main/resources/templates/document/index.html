@@ -191,15 +191,16 @@
 
                 <thead>
 
-                <tr>
+					<tr>
 
-                    <th>Document No</th>
-                    <th>Title</th>
-                    <th>Department</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+					    <th>Document No</th>
+					    <th>Title</th>
+					    <th>Department</th>
+					    <th>Status</th>
+					    <th>Current Stage</th>
+					    <th>Actions</th>
 
-                </tr>
+					</tr>
 
                 </thead>
 
@@ -218,24 +219,61 @@
 
                     
 
-						<td>
+					<td>
 
-						    <span th:if="${doc.status == 'DRAFT'}"
-						          class="badge bg-secondary">
+					    <span th:if="${doc.status == 'DRAFT'}"
+					          class="badge bg-secondary">
 
-						        DRAFT
+					        DRAFT
 
-						    </span>
+					    </span>
 
-						    <span th:if="${doc.status == 'SUBMITTED'}"
-						          class="badge bg-primary">
+					    <span th:if="${doc.status == 'SUBMITTED'}"
+					          class="badge bg-primary">
 
-						        SUBMITTED
+					        SUBMITTED
 
-						    </span>
+					    </span>
 
-						</td>
+					    <span th:if="${doc.status == 'UNDER_REVIEW'}"
+					          class="badge bg-warning text-dark">
 
+					        UNDER REVIEW
+
+					    </span>
+
+					    <span th:if="${doc.status == 'APPROVED'}"
+					          class="badge bg-success">
+
+					        APPROVED
+
+					    </span>
+
+					    <span th:if="${doc.status == 'REJECTED'}"
+					          class="badge bg-danger">
+
+					        REJECTED
+
+					    </span>
+
+					    <span th:if="${doc.status == 'ADDITIONAL_INFO_REQUESTED'}"
+					          class="badge bg-info text-dark">
+
+					        INFO REQUESTED
+
+					    </span>
+						
+						<span th:if="${doc.status == 'RESUBMITTED'}"
+						      class="badge bg-info">
+
+						    RESUBMITTED
+
+						</span>
+
+					</td>
+						
+					<td th:text="${doc.currentStage}">
+					</td>
                  
 
 					<td>
@@ -258,6 +296,17 @@
 							</a>
 
 					    </div>
+						<div th:if="${doc.status == 'ADDITIONAL_INFO_REQUESTED'}">
+
+						    <a th:href="@{/documents/respond/{id}(id=${doc.id})}"
+						       class="btn btn-info btn-sm"
+						       onclick="return confirm('Respond to information request?')">
+
+						        Respond
+
+						    </a>
+
+						</div>
 
 					</td>
 

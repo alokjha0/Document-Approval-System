@@ -110,17 +110,47 @@ public class DocumentServiceImpl implements DocumentService {
 	@Override
 	public List<DocumentDto> getDocumentsByOwner(String email) {
 
-		User owner = userRepository.findByEmailAndIsDeletedFalse(email)
-				.orElseThrow(() -> new RuntimeException("User not found"));
+	    User owner =
+	            userRepository
+	                    .findByEmailAndIsDeletedFalse(email)
+	                    .orElseThrow(() ->
+	                            new RuntimeException("User not found"));
 
-		return documentRepository.findByOwnerOrderByCreatedAtDesc(owner).stream().map(document ->
+	    return documentRepository
+	            .findByOwnerOrderByCreatedAtDesc(owner)
+	            .stream()
+	            .map(document -> {
 
-		DocumentDto.builder().id(document.getId()).documentNumber(document.getDocumentNumber())
-				.title(document.getTitle()).description(document.getDescription()).status(document.getStatus().name())
-				.departmentId(document.getDepartment().getId())
-				.departmentName(document.getDepartment().getDepartmentName()).build()
+	                WorkflowInstance workflowInstance =
+	                        workflowInstanceRepository
+	                                .findByDocument(document)
+	                                .orElse(null);
 
-		).toList();
+	                return DocumentDto.builder()
+	                        .id(document.getId())
+	                        .documentNumber(
+	                                document.getDocumentNumber())
+	                        .title(
+	                                document.getTitle())
+	                        .description(
+	                                document.getDescription())
+	                        .status(
+	                                document.getStatus().name())
+	                        .currentStage(
+	                                workflowInstance != null
+	                                        ? workflowInstance
+	                                                .getCurrentStage()
+	                                                .name()
+	                                        : "-")
+	                        .departmentId(
+	                                document.getDepartment()
+	                                        .getId())
+	                        .departmentName(
+	                                document.getDepartment()
+	                                        .getDepartmentName())
+	                        .build();
+	            })
+	            .toList();
 	}
 
 	@Override
@@ -170,5 +200,95 @@ public class DocumentServiceImpl implements DocumentService {
 				.performedBy(currentUser).remarks("Draft document updated").build();
 
 		auditLogRepository.save(auditLog);
+	}
+	
+	@Override
+	@Transactional
+	public void respondToInfoRequest(
+	        Long documentId,
+	        String email) {
+
+	    User employee =
+	            userRepository
+	                    .findByEmailAndIsDeletedFalse(
+	                            email)
+	                    .orElseThrow(
+	                            () -> new RuntimeException(
+	                                    "User not found"));
+
+	    Document document =
+	            documentRepository
+	                    .findById(documentId)
+	                    .orElseThrow(
+	                            () -> new RuntimeException(
+	                                    "Document not found"));
+
+	    if(!document.getOwner()
+	            .getId()
+	            .equals(employee.getId())) {
+
+	        throw new RuntimeException(
+	                "Only owner can respond");
+	    }
+
+	    if(document.getStatus()
+	            != DocumentStatus.ADDITIONAL_INFO_REQUESTED) {
+
+	        throw new RuntimeException(
+	                "Document is not waiting for information");
+	    }
+
+	    document.setStatus(
+	            DocumentStatus.RESUBMITTED);
+
+	    documentRepository.save(
+	            document);
+
+	    WorkflowInstance workflowInstance =
+	            workflowInstanceRepository
+	                    .findByDocument(document)
+	                    .orElseThrow(
+	                            () -> new RuntimeException(
+	                                    "Workflow not found"));
+
+	    workflowInstance.setCurrentStage(
+	            WorkflowStage.REVIEWER);
+
+	    workflowInstanceRepository.save(
+	            workflowInstance);
+
+	    WorkflowTask workflowTask =
+	            WorkflowTask.builder()
+	                    .workflowInstance(
+	                            workflowInstance)
+	                    .department(
+	                            document.getDepartment())
+	                    .stage(
+	                            WorkflowStage.REVIEWER)
+	                    .status(
+	                            TaskStatus.PENDING)
+	                    .build();
+
+	    workflowTaskRepository.save(
+	            workflowTask);
+
+	    AuditLog auditLog =
+	            AuditLog.builder()
+	                    .documentId(
+	                            document.getId())
+	                    .action(
+	                            AuditAction.INFO_PROVIDED)
+	                    .fromStatus(
+	                            DocumentStatus.ADDITIONAL_INFO_REQUESTED)
+	                    .toStatus(
+	                            DocumentStatus.RESUBMITTED)
+	                    .performedBy(
+	                            employee)
+	                    .remarks(
+	                            "Additional information provided")
+	                    .build();
+
+	    auditLogRepository.save(
+	            auditLog);
 	}
 }

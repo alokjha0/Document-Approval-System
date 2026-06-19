@@ -99,4 +99,27 @@ public class DocumentController {
 
 	    return "redirect:/documents";
 	}
+	
+	@GetMapping("/respond/approver/{id}")
+	public String respondToInfoRequestByApprover(
+	        @PathVariable Long id,
+	        Authentication authentication) {
+
+	    documentService.respondToInfoRequestByApprover(
+	            id,
+	            authentication.getName());
+
+	    return "redirect:/documents";
+	}
+	@GetMapping("/respond/senior-approver/{id}")
+	public String respondToInfoRequestBySeniorApprover(
+	        @PathVariable Long id,
+	        Authentication authentication) {
+
+	    documentService.respondToInfoRequestBySeniorApprover(
+	            id,
+	            authentication.getName());
+
+	    return "redirect:/documents";
+	}
 }

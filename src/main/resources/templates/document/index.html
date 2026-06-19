@@ -296,7 +296,7 @@
 							</a>
 
 					    </div>
-						<div th:if="${doc.status == 'ADDITIONAL_INFO_REQUESTED'}">
+						<div th:if="${doc.status == 'ADDITIONAL_INFO_REQUESTED' and doc.currentStage == 'REVIEWER'}">
 
 						    <a th:href="@{/documents/respond/{id}(id=${doc.id})}"
 						       class="btn btn-info btn-sm"
@@ -307,6 +307,32 @@
 						    </a>
 
 						</div>
+						
+						<div th:if="${doc.status == 'ADDITIONAL_INFO_REQUESTED' and doc.currentStage == 'APPROVER'}">
+
+						    <a th:href="@{/documents/respond/approver/{id}(id=${doc.id})}"
+						       class="btn btn-info btn-sm"
+						       onclick="return confirm('Respond to information request?')">
+
+						        Respond
+
+						    </a>
+
+						</div>
+						
+						<div th:if="${doc.status == 'ADDITIONAL_INFO_REQUESTED' and doc.currentStage == 'SENIOR_APPROVER'}">
+
+						    <a th:href="@{/documents/respond/senior-approver/{id}(id=${doc.id})}"
+						       class="btn btn-info btn-sm"
+						       onclick="return confirm('Respond to information request?')">
+
+						        Respond
+
+						    </a>
+
+						</div>
+
+
 
 					</td>
 

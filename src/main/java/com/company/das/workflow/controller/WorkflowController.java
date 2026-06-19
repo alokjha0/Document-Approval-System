@@ -81,4 +81,135 @@ public class WorkflowController {
         return "redirect:/workflow/reviewer";
     }
     
+    @GetMapping("/approver")
+    public String approverDashboard(
+            Authentication authentication,
+            Model model) {
+
+        model.addAttribute(
+                "tasks",
+                workflowService
+                        .getApproverTasks(
+                                authentication.getName()));
+
+        return "workflow/approver-dashboard";
+    }
+    
+    
+    
+    @GetMapping("/approver/review/{taskId}")
+    public String approverReviewDocument(
+            @PathVariable Long taskId,
+            Authentication authentication,
+            Model model) {
+
+        model.addAttribute(
+                "document",
+                workflowService.getDocumentForReview(
+                        taskId,
+                        authentication.getName()));
+
+        return "workflow/approver-document";
+    }
+    
+    @GetMapping("/approver/approve/{taskId}")
+    public String approveByApprover(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.approveByApprover(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/approver";
+    }
+    
+    @GetMapping("/approver/reject/{taskId}")
+    public String rejectByApprover(
+			@PathVariable Long taskId,
+			Authentication authentication) {
+
+		workflowService.rejectByApprover(
+				taskId,
+				authentication.getName());
+
+		return "redirect:/workflow/approver";
+	}
+    
+    @GetMapping("/senior-approver")
+    public String seniorApproverDashboard(
+            Authentication authentication,
+            Model model) {
+
+        model.addAttribute(
+                "tasks",
+                workflowService.getSeniorApproverTasks(
+                        authentication.getName()));
+
+        return "workflow/senior-approver-dashboard";
+    }
+    
+    
+    @GetMapping("/senior-approver/review/{taskId}")
+    public String seniorApproverReviewDocument(
+            @PathVariable Long taskId,
+            Authentication authentication,
+            Model model) {
+
+        model.addAttribute(
+                "document",
+                workflowService.getDocumentForReview(
+                        taskId,
+                        authentication.getName()));
+
+        return "workflow/senior-approver-document";
+    }
+    
+    @GetMapping("/senior-approver/approve/{taskId}")
+    public String approveBySeniorApprover(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.approveBySeniorApprover(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/senior-approver";
+    }
+    
+    @GetMapping("/approver/request-info/{taskId}")
+    public String requestInfoByApprover(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.requestInfoByApprover(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/approver";
+    }
+    
+    @GetMapping("/senior-approver/request-info/{taskId}")
+    public String requestInfoBySeniorApprover(
+            @PathVariable Long taskId,
+            Authentication authentication) {
+
+        workflowService.requestInfoBySeniorApprover(
+                taskId,
+                authentication.getName());
+
+        return "redirect:/workflow/senior-approver";
+    }
+    
+    @GetMapping("/senior-approver/reject/{taskId}")
+    public String rejectBySeniorApprover(
+			@PathVariable Long taskId,
+			Authentication authentication) {
+
+		workflowService.rejectBySeniorApprover(
+				taskId,
+				authentication.getName());
+
+		return "redirect:/workflow/senior-approver";
+	}
 }

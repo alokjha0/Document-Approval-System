@@ -182,17 +182,146 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Override
 	@Transactional
-	public void rejectDocument(
-	        Long taskId,
-	        String reviewerEmail) {
+	public void rejectDocument(Long taskId, String reviewerEmail) {
 
-	    User reviewer =
+		User reviewer = userRepository.findByEmailAndIsDeletedFalse(reviewerEmail)
+				.orElseThrow(() -> new RuntimeException("Reviewer not found"));
+
+		WorkflowTask task = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+
+		if (task.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+
+		// Complete Current Task
+
+		task.setStatus(TaskStatus.COMPLETED);
+
+		task.setCompletedAt(LocalDateTime.now());
+
+		task.setActionTakenBy(reviewer);
+
+		workflowTaskRepository.save(task);
+
+		// Reject Document
+
+		Document document = task.getWorkflowInstance().getDocument();
+
+		document.setStatus(DocumentStatus.REJECTED);
+
+		documentRepository.save(document);
+
+		// Complete Workflow Instance
+
+		WorkflowInstance workflowInstance = task.getWorkflowInstance();
+
+		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+
+		workflowInstance.setCompletedAt(LocalDateTime.now());
+
+		workflowInstanceRepository.save(workflowInstance);
+
+		// Audit Log
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.DOCUMENT_REJECTED)
+				.fromStatus(DocumentStatus.SUBMITTED).toStatus(DocumentStatus.REJECTED).performedBy(reviewer)
+				.remarks("Document rejected").build();
+
+		auditLogRepository.save(auditLog);
+	}
+
+	@Override
+	public List<ReviewTaskDto> getApproverTasks(String approverEmail) {
+
+		User approver = userRepository.findByEmailAndIsDeletedFalse(approverEmail)
+				.orElseThrow(() -> new RuntimeException("Approver not found"));
+
+		if (approver.getRole() != UserRole.APPROVER) {
+
+			throw new RuntimeException("Only approvers can access this page");
+		}
+
+		Department department = approver.getDepartment();
+
+		return workflowTaskRepository
+				.findByDepartmentAndStageAndStatus(department, WorkflowStage.APPROVER, TaskStatus.PENDING).stream()
+				.map(task ->
+
+				ReviewTaskDto.builder().taskId(task.getId())
+						.documentId(task.getWorkflowInstance().getDocument().getId())
+						.documentNumber(task.getWorkflowInstance().getDocument().getDocumentNumber())
+						.title(task.getWorkflowInstance().getDocument().getTitle())
+						.submittedBy(task.getWorkflowInstance().getDocument().getOwner().getName())
+						.requestorDepartment(
+								task.getWorkflowInstance().getDocument().getOwner().getDepartment().getDepartmentName())
+						.stage(task.getStage().name()).status(task.getStatus().name()).build()
+
+				).toList();
+	}
+
+	@Override
+	@Transactional
+	public void approveByApprover(Long taskId, String approverEmail) {
+
+		User approver = userRepository.findByEmailAndIsDeletedFalse(approverEmail)
+				.orElseThrow(() -> new RuntimeException("Approver not found"));
+
+		WorkflowTask currentTask = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+
+		if (currentTask.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+
+		currentTask.setStatus(TaskStatus.COMPLETED);
+
+		currentTask.setCompletedAt(LocalDateTime.now());
+
+		currentTask.setActionTakenBy(approver);
+
+		workflowTaskRepository.save(currentTask);
+
+		WorkflowInstance workflowInstance = currentTask.getWorkflowInstance();
+
+		Document document = workflowInstance.getDocument();
+
+		document.setStatus(DocumentStatus.UNDER_REVIEW);
+
+		documentRepository.save(document);
+
+		workflowInstance.setCurrentStage(WorkflowStage.SENIOR_APPROVER);
+
+		workflowInstanceRepository.save(workflowInstance);
+
+		WorkflowTask nextTask = WorkflowTask.builder().workflowInstance(workflowInstance)
+				.department(currentTask.getDepartment()).stage(WorkflowStage.SENIOR_APPROVER).status(TaskStatus.PENDING)
+				.build();
+
+		workflowTaskRepository.save(nextTask);
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.APPROVER_APPROVED)
+				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.UNDER_REVIEW).performedBy(approver)
+				.remarks("Approved by approver").build();
+
+		auditLogRepository.save(auditLog);
+	}
+	
+	@Override
+	@Transactional
+	public void requestInfoByApprover(
+	        Long taskId,
+	        String approverEmail) {
+
+	    User approver =
 	            userRepository
 	                    .findByEmailAndIsDeletedFalse(
-	                            reviewerEmail)
+	                            approverEmail)
 	                    .orElseThrow(
 	                            () -> new RuntimeException(
-	                                    "Reviewer not found"));
+	                                    "Approver not found"));
 
 	    WorkflowTask task =
 	            workflowTaskRepository
@@ -201,13 +330,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 	                            () -> new RuntimeException(
 	                                    "Task not found"));
 
-	    if (task.getStatus() != TaskStatus.PENDING) {
+	    if (task.getStatus()
+	            != TaskStatus.PENDING) {
 
 	        throw new RuntimeException(
 	                "Task already processed");
 	    }
-
-	    // Complete Current Task
 
 	    task.setStatus(
 	            TaskStatus.COMPLETED);
@@ -216,56 +344,279 @@ public class WorkflowServiceImpl implements WorkflowService {
 	            LocalDateTime.now());
 
 	    task.setActionTakenBy(
-	            reviewer);
+	            approver);
 
 	    workflowTaskRepository.save(
 	            task);
-
-	    // Reject Document
 
 	    Document document =
 	            task.getWorkflowInstance()
 	                    .getDocument();
 
 	    document.setStatus(
-	            DocumentStatus.REJECTED);
+	            DocumentStatus.ADDITIONAL_INFO_REQUESTED);
 
 	    documentRepository.save(
 	            document);
-
-	    // Complete Workflow Instance
-
-	    WorkflowInstance workflowInstance =
-	            task.getWorkflowInstance();
-
-	    workflowInstance.setStatus(
-	            WorkflowStatus.COMPLETED);
-
-	    workflowInstance.setCompletedAt(
-	            LocalDateTime.now());
-
-	    workflowInstanceRepository.save(
-	            workflowInstance);
-
-	    // Audit Log
 
 	    AuditLog auditLog =
 	            AuditLog.builder()
 	                    .documentId(
 	                            document.getId())
 	                    .action(
-	                            AuditAction.DOCUMENT_REJECTED)
+	                            AuditAction.INFO_REQUESTED)
 	                    .fromStatus(
-	                            DocumentStatus.SUBMITTED)
+	                            DocumentStatus.UNDER_REVIEW)
 	                    .toStatus(
-	                            DocumentStatus.REJECTED)
+	                            DocumentStatus.ADDITIONAL_INFO_REQUESTED)
 	                    .performedBy(
-	                            reviewer)
+	                            approver)
 	                    .remarks(
-	                            "Document rejected")
+	                            "Additional information requested by approver")
 	                    .build();
 
 	    auditLogRepository.save(
 	            auditLog);
 	}
+	
+	@Override
+	@Transactional
+	public void rejectByApprover(Long taskId, String approverEmail) {
+
+		User approver = userRepository.findByEmailAndIsDeletedFalse(approverEmail)
+				.orElseThrow(() -> new RuntimeException("Approver not found"));
+
+		WorkflowTask task = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+		if (task.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+		// Complete Current Task
+		task.setStatus(TaskStatus.COMPLETED);
+		task.setCompletedAt(LocalDateTime.now());
+		task.setActionTakenBy(approver);
+		workflowTaskRepository.save(task);
+		
+		// Reject Document
+		Document document = task.getWorkflowInstance().getDocument();
+		document.setStatus(DocumentStatus.REJECTED);
+		documentRepository.save(document);
+		
+		// Complete Workflow Instance
+		WorkflowInstance workflowInstance = task.getWorkflowInstance();
+		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+		workflowInstance.setCompletedAt(LocalDateTime.now());
+		workflowInstanceRepository.save(workflowInstance);
+			
+		// Audit Log
+		AuditLog auditLog = AuditLog.builder()
+				.documentId(document.getId())
+				.action(AuditAction.DOCUMENT_REJECTED)
+				.fromStatus(DocumentStatus.UNDER_REVIEW)
+				.toStatus(DocumentStatus.REJECTED)
+				.performedBy(approver)
+				.remarks("Document rejected by approver")
+				.build();
+		auditLogRepository.save(auditLog);
+		}
+		
+	
+
+	@Override
+	public List<ReviewTaskDto> getSeniorApproverTasks(String approverEmail) {
+
+		User seniorApprover = userRepository.findByEmailAndIsDeletedFalse(approverEmail)
+				.orElseThrow(() -> new RuntimeException("Senior Approver not found"));
+
+		if (seniorApprover.getRole() != UserRole.SENIOR_APPROVER) {
+
+			throw new RuntimeException("Only senior approvers can access this page");
+		}
+
+		Department department = seniorApprover.getDepartment();
+
+		return workflowTaskRepository
+				.findByDepartmentAndStageAndStatus(department, WorkflowStage.SENIOR_APPROVER, TaskStatus.PENDING)
+				.stream().map(task ->
+
+				ReviewTaskDto.builder().taskId(task.getId())
+						.documentId(task.getWorkflowInstance().getDocument().getId())
+						.documentNumber(task.getWorkflowInstance().getDocument().getDocumentNumber())
+						.title(task.getWorkflowInstance().getDocument().getTitle())
+						.submittedBy(task.getWorkflowInstance().getDocument().getOwner().getName())
+						.requestorDepartment(
+								task.getWorkflowInstance().getDocument().getOwner().getDepartment().getDepartmentName())
+						.stage(task.getStage().name()).status(task.getStatus().name()).build()
+
+				).toList();
+	}
+
+	@Override
+	@Transactional
+	public void approveBySeniorApprover(Long taskId, String email) {
+
+		User seniorApprover = userRepository.findByEmailAndIsDeletedFalse(email)
+				.orElseThrow(() -> new RuntimeException("Senior Approver not found"));
+
+		WorkflowTask currentTask = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+
+		if (currentTask.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+
+		currentTask.setStatus(TaskStatus.COMPLETED);
+
+		currentTask.setCompletedAt(LocalDateTime.now());
+
+		currentTask.setActionTakenBy(seniorApprover);
+
+		workflowTaskRepository.save(currentTask);
+
+		WorkflowInstance workflowInstance = currentTask.getWorkflowInstance();
+
+		Document document = workflowInstance.getDocument();
+
+		document.setStatus(DocumentStatus.APPROVED);
+
+		documentRepository.save(document);
+
+		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+
+		workflowInstance.setCompletedAt(LocalDateTime.now());
+
+		workflowInstanceRepository.save(workflowInstance);
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.SENIOR_APPROVER_APPROVED)
+				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.APPROVED).performedBy(seniorApprover)
+				.remarks("Approved by senior approver").build();
+
+		auditLogRepository.save(auditLog);
+	}
+	
+	
+	@Override
+	@Transactional
+	public void requestInfoBySeniorApprover(
+	        Long taskId,
+	        String seniorApproverEmail) {
+
+	    User seniorApprover =
+	            userRepository
+	                    .findByEmailAndIsDeletedFalse(
+	                            seniorApproverEmail)
+	                    .orElseThrow(
+	                            () -> new RuntimeException(
+	                                    "Senior Approver not found"));
+
+	    WorkflowTask task =
+	            workflowTaskRepository
+	                    .findById(taskId)
+	                    .orElseThrow(
+	                            () -> new RuntimeException(
+	                                    "Task not found"));
+
+	    if (task.getStatus()
+	            != TaskStatus.PENDING) {
+
+	        throw new RuntimeException(
+	                "Task already processed");
+	    }
+
+	    task.setStatus(
+	            TaskStatus.COMPLETED);
+
+	    task.setCompletedAt(
+	            LocalDateTime.now());
+
+	    task.setActionTakenBy(
+	            seniorApprover);
+
+	    workflowTaskRepository.save(
+	            task);
+
+	    Document document =
+	            task.getWorkflowInstance()
+	                    .getDocument();
+
+	    document.setStatus(
+	            DocumentStatus.ADDITIONAL_INFO_REQUESTED);
+
+	    documentRepository.save(
+	            document);
+
+	    AuditLog auditLog =
+	            AuditLog.builder()
+	                    .documentId(
+	                            document.getId())
+	                    .action(
+	                            AuditAction.INFO_REQUESTED)
+	                    .fromStatus(
+	                            DocumentStatus.UNDER_REVIEW)
+	                    .toStatus(
+	                            DocumentStatus.ADDITIONAL_INFO_REQUESTED)
+	                    .performedBy(
+	                            seniorApprover)
+	                    .remarks(
+	                            "Additional information requested by senior approver")
+	                    .build();
+
+	    auditLogRepository.save(
+	            auditLog);
+	}
+	
+	@Override
+	@Transactional
+	public void rejectBySeniorApprover(Long taskId, String seniorApproverEmail) {
+
+		User seniorApprover = userRepository.findByEmailAndIsDeletedFalse(seniorApproverEmail)
+				.orElseThrow(() -> new RuntimeException("Senior Approver not found"));
+
+		WorkflowTask task = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+
+		if (task.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+
+		// Complete Current Task
+
+		task.setStatus(TaskStatus.COMPLETED);
+
+		task.setCompletedAt(LocalDateTime.now());
+
+		task.setActionTakenBy(seniorApprover);
+
+		workflowTaskRepository.save(task);
+
+		// Reject Document
+
+		Document document = task.getWorkflowInstance().getDocument();
+
+		document.setStatus(DocumentStatus.REJECTED);
+
+		documentRepository.save(document);
+
+		// Complete Workflow Instance
+
+		WorkflowInstance workflowInstance = task.getWorkflowInstance();
+
+		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+
+		workflowInstance.setCompletedAt(LocalDateTime.now());
+
+		workflowInstanceRepository.save(workflowInstance);
+
+		// Audit Log
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.DOCUMENT_REJECTED)
+				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.REJECTED).performedBy(seniorApprover)
+				.remarks("Document rejected by senior approver").build();
+
+		auditLogRepository.save(auditLog);
+	}
+	
 }

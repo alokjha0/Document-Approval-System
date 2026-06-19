@@ -204,6 +204,8 @@ public class DocumentServiceImpl implements DocumentService {
 	
 	@Override
 	@Transactional
+	
+	// this method is used to respond to additional information request from the reviewer.
 	public void respondToInfoRequest(
 	        Long documentId,
 	        String email) {
@@ -285,10 +287,98 @@ public class DocumentServiceImpl implements DocumentService {
 	                    .performedBy(
 	                            employee)
 	                    .remarks(
-	                            "Additional information provided")
+	                            "Additional information provided to reviewer")
 	                    .build();
 
 	    auditLogRepository.save(
 	            auditLog);
+	}
+	
+	@Override
+	@Transactional
+	public void respondToInfoRequestByApprover(Long documentId, String email) {
+
+	    User approver = userRepository.findByEmailAndIsDeletedFalse(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    Document document = documentRepository.findById(documentId)
+	            .orElseThrow(() -> new RuntimeException("Document not found"));
+
+	    if (document.getStatus() != DocumentStatus.ADDITIONAL_INFO_REQUESTED) {
+	        throw new RuntimeException("Document is not waiting for information");
+	    }
+
+	    document.setStatus(DocumentStatus.RESUBMITTED);
+	    documentRepository.save(document);
+
+	    WorkflowInstance workflowInstance = workflowInstanceRepository.findByDocument(document)
+	            .orElseThrow(() -> new RuntimeException("Workflow not found"));
+
+	    workflowInstance.setCurrentStage(WorkflowStage.APPROVER);
+	    workflowInstanceRepository.save(workflowInstance);
+
+	    WorkflowTask workflowTask = WorkflowTask.builder()
+	            .workflowInstance(workflowInstance)
+	            .department(document.getDepartment())
+	            .stage(WorkflowStage.APPROVER)
+	            .status(TaskStatus.PENDING)
+	            .build();
+
+	    workflowTaskRepository.save(workflowTask);
+
+	    AuditLog auditLog = AuditLog.builder()
+	            .documentId(document.getId())
+	            .action(AuditAction.INFO_PROVIDED)
+	            .fromStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED)
+	            .toStatus(DocumentStatus.RESUBMITTED)
+	            .performedBy(approver)
+	            .remarks("Additional information provided to approver")
+	            .build();
+
+	    auditLogRepository.save(auditLog);
+	}
+	
+	@Override
+	@Transactional
+	public void respondToInfoRequestBySeniorApprover(Long documentId, String email) {
+
+	    User seniorApprover = userRepository.findByEmailAndIsDeletedFalse(email)
+	            .orElseThrow(() -> new RuntimeException("User not found"));
+
+	    Document document = documentRepository.findById(documentId)
+	            .orElseThrow(() -> new RuntimeException("Document not found"));
+
+	    if (document.getStatus() != DocumentStatus.ADDITIONAL_INFO_REQUESTED) {
+	        throw new RuntimeException("Document is not waiting for information");
+	    }
+
+	    document.setStatus(DocumentStatus.RESUBMITTED);
+	    documentRepository.save(document);
+
+	    WorkflowInstance workflowInstance = workflowInstanceRepository.findByDocument(document)
+	            .orElseThrow(() -> new RuntimeException("Workflow not found"));
+
+	    workflowInstance.setCurrentStage(WorkflowStage.SENIOR_APPROVER);
+	    workflowInstanceRepository.save(workflowInstance);
+
+	    WorkflowTask workflowTask = WorkflowTask.builder()
+	            .workflowInstance(workflowInstance)
+	            .department(document.getDepartment())
+	            .stage(WorkflowStage.SENIOR_APPROVER)
+	            .status(TaskStatus.PENDING)
+	            .build();
+
+	    workflowTaskRepository.save(workflowTask);
+
+	    AuditLog auditLog = AuditLog.builder()
+	            .documentId(document.getId())
+	            .action(AuditAction.INFO_PROVIDED)
+	            .fromStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED)
+	            .toStatus(DocumentStatus.RESUBMITTED)
+	            .performedBy(seniorApprover)
+	            .remarks("Additional information provided to senior approver")
+	            .build();
+
+	    auditLogRepository.save(auditLog);
 	}
 }

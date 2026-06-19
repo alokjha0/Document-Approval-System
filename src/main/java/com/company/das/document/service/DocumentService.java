@@ -31,4 +31,14 @@ public interface DocumentService {
             Long documentId,
             String email
     );
+    
+    void respondToInfoRequestByApprover(
+			Long documentId,
+			String email
+	);
+    
+    void respondToInfoRequestBySeniorApprover(
+			Long documentId,
+			String email
+			);
 }

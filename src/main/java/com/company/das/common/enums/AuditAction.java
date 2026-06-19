@@ -15,6 +15,10 @@ public enum AuditAction {
     INFO_REQUESTED,
 
     INFO_PROVIDED,
+    
+    APPROVER_APPROVED,
+    
+    SENIOR_APPROVER_APPROVED,
 
     DOCUMENT_APPROVED,
 

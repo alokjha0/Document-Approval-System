@@ -1,5 +1,7 @@
 package com.company.das.workflow.dto;
 
+import com.company.das.common.enums.CommentType;
+
 import lombok.*;
 
 @Getter
@@ -26,4 +28,19 @@ public class ReviewDocumentDto {
     private String status;
 
     private String currentStage;
+    
+//Additional fields for comments and workflow
+    
+    private String latestComment;
+
+    private String latestCommentBy;
+
+    private String latestCommentStage;
+
+    private String latestCommentDepartment;
+
+    private String latestCommentTime;
+    
+    private CommentType latestCommentType;
+
 }

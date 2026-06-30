@@ -13,23 +13,23 @@ public interface WorkflowService {
 
 	ReviewDocumentDto getDocumentForReview(Long taskId, String reviewerEmail);
 
-	void requestInfo(Long taskId, String reviewerEmail);
+	void requestInfo(Long taskId, String reviewerEmail, String comment);
 
-	void rejectDocument(Long taskId, String reviewerEmail);
+	void rejectDocument(Long taskId, String reviewerEmail, String comment);
 
 	List<ReviewTaskDto> getApproverTasks(String approverEmail);
 
 	void approveByApprover(Long taskId, String approverEmail);
 
-	void requestInfoByApprover(Long taskId, String approverEmail);
+	void requestInfoByApprover(Long taskId, String approverEmail, String comment);
 
-	void rejectByApprover(Long taskId, String approverEmail);
+	void rejectByApprover(Long taskId, String approverEmail, String comment);
 
 	List<ReviewTaskDto> getSeniorApproverTasks(String email);
 
 	void approveBySeniorApprover(Long taskId, String email);
 
-	void requestInfoBySeniorApprover(Long taskId, String seniorApproverEmail);
+	void requestInfoBySeniorApprover(Long taskId, String seniorApproverEmail, String comment);
 
-	void rejectBySeniorApprover(Long taskId, String seniorApproverEmail);
+	void rejectBySeniorApprover(Long taskId, String seniorApproverEmail, String comment);
 }

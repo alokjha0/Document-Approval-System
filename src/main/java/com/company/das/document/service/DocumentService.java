@@ -6,39 +6,17 @@ import com.company.das.document.dto.DocumentDto;
 
 public interface DocumentService {
 
-    void createDocument(
-            DocumentDto documentDto,
-            String loggedInUserEmail
-    );
-    
-    void submitDocument(
-            Long documentId,
-            String loggedInUserEmail
-    );
-    
-    List<DocumentDto> getDocumentsByOwner(
-            String email
-    );
-    DocumentDto getDocumentById(Long id);
+	void createDocument(DocumentDto documentDto, String loggedInUserEmail);
 
-    void updateDocument(
-            Long id,
-            DocumentDto documentDto,
-            String loggedInUserEmail
-    );
-    
-    void respondToInfoRequest(
-            Long documentId,
-            String email
-    );
-    
-    void respondToInfoRequestByApprover(
-			Long documentId,
-			String email
-	);
-    
-    void respondToInfoRequestBySeniorApprover(
-			Long documentId,
-			String email
-			);
+	void submitDocument(Long documentId, String loggedInUserEmail);
+
+	List<DocumentDto> getDocumentsByOwner(String email);
+
+	DocumentDto getDocumentById(Long id);
+
+	void updateDocument(Long id, DocumentDto documentDto, String loggedInUserEmail);
+
+	void submitResponse(Long documentId, DocumentDto documentDto, String email);
+
+	DocumentDto getDocumentDetails(Long id, String email);
 }

@@ -1,5 +1,6 @@
 package com.company.das.document.entity;
 
+import com.company.das.application.entity.Application;
 import com.company.das.common.enums.DocumentStatus;
 import com.company.das.department.entity.Department;
 import com.company.das.user.entity.User;
@@ -44,6 +45,13 @@ public class Document {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "application_id",
+            nullable = false
+    )
+    private Application application;
 
     private LocalDateTime createdAt;
 

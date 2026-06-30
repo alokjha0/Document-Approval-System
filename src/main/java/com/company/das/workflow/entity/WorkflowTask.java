@@ -43,6 +43,9 @@ public class WorkflowTask {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private WorkflowStage stage;
+    
+    @Column(nullable = false)
+    private Integer stepOrder;
 
     @Builder.Default
     @Enumerated(EnumType.STRING)

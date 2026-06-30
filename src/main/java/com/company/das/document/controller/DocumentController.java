@@ -87,39 +87,36 @@ public class DocumentController {
 
 		return "redirect:/documents";
 	}
-	
+
 	@GetMapping("/respond/{id}")
-	public String respondToInfoRequest(
-	        @PathVariable Long id,
-	        Authentication authentication) {
+	public String respondToInfoRequest(@PathVariable Long id, Authentication authentication, Model model) {
 
-	    documentService.respondToInfoRequest(
-	            id,
-	            authentication.getName());
+		model.addAttribute("documentDto", documentService.getDocumentDetails(id, authentication.getName()));
 
-	    return "redirect:/documents";
+		return "document/respond";
 	}
 	
-	@GetMapping("/respond/approver/{id}")
-	public String respondToInfoRequestByApprover(
+	@PostMapping("/respond/{id}")
+	public String submitResponse(
 	        @PathVariable Long id,
+	        @ModelAttribute("documentDto") DocumentDto documentDto,
 	        Authentication authentication) {
 
-	    documentService.respondToInfoRequestByApprover(
+	    documentService.submitResponse(
 	            id,
+	            documentDto,
 	            authentication.getName());
 
 	    return "redirect:/documents";
 	}
-	@GetMapping("/respond/senior-approver/{id}")
-	public String respondToInfoRequestBySeniorApprover(
-	        @PathVariable Long id,
-	        Authentication authentication) {
 
-	    documentService.respondToInfoRequestBySeniorApprover(
-	            id,
-	            authentication.getName());
+	
 
-	    return "redirect:/documents";
+	@GetMapping("/view/{id}")
+	public String viewDocument(@PathVariable Long id, Authentication authentication, Model model) {
+
+		model.addAttribute("document", documentService.getDocumentDetails(id, authentication.getName()));
+
+		return "document/view";
 	}
 }

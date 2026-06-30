@@ -1,5 +1,7 @@
 package com.company.das.document.dto;
 
+import com.company.das.common.enums.CommentType;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -13,7 +15,12 @@ import lombok.*;
 public class DocumentDto {
 
     private Long id;
-
+    
+    @NotNull(message = "Application is required")
+    private Long applicationId;
+    
+    private String applicationName;
+    
     private String documentNumber;
 
     @NotBlank(message = "Title is required")
@@ -32,4 +39,21 @@ public class DocumentDto {
     private String currentStage;
 
     private String departmentName;
+    
+//Additional fields for comments and workflow
+    
+    private String latestComment;
+
+    private String latestCommentBy;
+
+    private String latestCommentStage;
+
+    private String latestCommentDepartment;
+
+    private String latestCommentTime;
+    
+    private String responseComment;
+    
+    private CommentType latestCommentType;
+
 }

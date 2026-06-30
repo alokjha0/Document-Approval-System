@@ -1,8 +1,18 @@
 package com.company.das.workflow.service.impl;
 
+import com.company.das.application.entity.Application;
+import com.company.das.application.entity.ApplicationHierarchyMapping;
+import com.company.das.application.entity.HierarchyStep;
+import com.company.das.application.repository.ApplicationHierarchyMappingRepository;
+import com.company.das.application.repository.HierarchyStepRepository;
 import com.company.das.audit.entity.AuditLog;
 import com.company.das.audit.repository.AuditLogRepository;
+import com.company.das.comment.dto.DocumentCommentDto;
+import com.company.das.comment.entity.DocumentComment;
+import com.company.das.comment.repository.DocumentCommentRepository;
+import com.company.das.comment.service.DocumentCommentService;
 import com.company.das.common.enums.AuditAction;
+import com.company.das.common.enums.CommentType;
 import com.company.das.common.enums.DocumentStatus;
 import com.company.das.common.enums.TaskStatus;
 
@@ -41,6 +51,124 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private final AuditLogRepository auditLogRepository;
 
 	private final DocumentRepository documentRepository;
+
+	private final ApplicationHierarchyMappingRepository applicationHierarchyMappingRepository;
+
+	private final HierarchyStepRepository hierarchyStepRepository;
+
+	private final DocumentCommentRepository documentCommentRepository;
+
+	private final DocumentCommentService documentCommentService;
+
+	@Transactional
+	private void requestInfoInternal(Long taskId, String comment, String email, AuditAction action, String remarks) {
+
+		User user = userRepository.findByEmailAndIsDeletedFalse(email)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		WorkflowTask task = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+
+		if (task.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+
+		WorkflowInstance workflowInstance = task.getWorkflowInstance();
+
+		if (workflowInstance.getStatus() == WorkflowStatus.COMPLETED) {
+
+			throw new RuntimeException("Workflow already completed");
+		}
+
+		task.setStatus(TaskStatus.COMPLETED);
+
+		task.setCompletedAt(LocalDateTime.now());
+
+		task.setActionTakenBy(user);
+
+		workflowTaskRepository.save(task);
+
+		Document document = workflowInstance.getDocument();
+
+		DocumentStatus previousStatus = document.getStatus();
+
+		document.setStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED);
+
+		documentRepository.save(document);
+
+		DocumentComment documentComment = DocumentComment.builder().document(document).workflowTask(task)
+				.comment(comment).commentType(CommentType.REQUEST_INFO).commentedBy(user).build();
+
+		documentCommentRepository.save(documentComment);
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(action).fromStatus(previousStatus)
+				.toStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED).performedBy(user).remarks(remarks).build();
+
+		auditLogRepository.save(auditLog);
+	}
+
+	@Transactional
+	private void rejectInternal(Long taskId, String comment, String email, AuditAction action, String remarks) {
+
+		User user = userRepository.findByEmailAndIsDeletedFalse(email)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		WorkflowTask task = workflowTaskRepository.findById(taskId)
+				.orElseThrow(() -> new RuntimeException("Task not found"));
+
+		if (task.getStatus() != TaskStatus.PENDING) {
+
+			throw new RuntimeException("Task already processed");
+		}
+
+		WorkflowInstance workflowInstance = task.getWorkflowInstance();
+
+		if (workflowInstance.getStatus() == WorkflowStatus.COMPLETED) {
+
+			throw new RuntimeException("Workflow already completed");
+		}
+
+		// Complete Current Task
+
+		task.setStatus(TaskStatus.COMPLETED);
+
+		task.setCompletedAt(LocalDateTime.now());
+
+		task.setActionTakenBy(user);
+
+		workflowTaskRepository.save(task);
+
+		// Reject Document
+
+		Document document = workflowInstance.getDocument();
+
+		DocumentStatus previousStatus = document.getStatus();
+
+		document.setStatus(DocumentStatus.REJECTED);
+
+		documentRepository.save(document);
+
+		DocumentComment documentComment = DocumentComment.builder().document(document).workflowTask(task)
+				.comment(comment).commentType(CommentType.REJECTION).commentedBy(user).build();
+
+		documentCommentRepository.save(documentComment);
+
+		// Complete Workflow
+
+		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+
+		workflowInstance.setCompletedAt(LocalDateTime.now());
+
+		workflowInstanceRepository.save(workflowInstance);
+
+		// Audit Log
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(action).fromStatus(previousStatus)
+				.toStatus(DocumentStatus.REJECTED).performedBy(user).remarks(remarks).build();
+
+		auditLogRepository.save(auditLog);
+	}
 
 	@Override
 	public List<ReviewTaskDto> getReviewerTasks(String reviewerEmail) {
@@ -103,19 +231,66 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		documentRepository.save(document);
 
-		workflowInstance.setCurrentStage(WorkflowStage.APPROVER);
+		Application application = document.getApplication();
+
+		ApplicationHierarchyMapping mapping = applicationHierarchyMappingRepository
+				.findByApplicationAndIsDeletedFalse(application)
+				.orElseThrow(() -> new RuntimeException("Workflow mapping not found"));
+
+		List<HierarchyStep> hierarchySteps = hierarchyStepRepository
+				.findByHierarchyAndIsDeletedFalseOrderByStepOrderAsc(mapping.getHierarchy());
+
+		HierarchyStep nextStep = hierarchySteps.stream()
+				.filter(step -> step.getStepOrder() > currentTask.getStepOrder()).findFirst().orElse(null);
+
+		// NO NEXT STEP -> WORKFLOW COMPLETED
+
+		if (nextStep == null) {
+
+			document.setStatus(DocumentStatus.APPROVED);
+
+			documentRepository.save(document);
+
+			workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+
+			workflowInstance.setCompletedAt(LocalDateTime.now());
+
+			workflowInstanceRepository.save(workflowInstance);
+
+			AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.REVIEW_APPROVED)
+					.performedBy(reviewer).remarks("Final workflow step approved")
+					.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.APPROVED).build();
+
+			auditLogRepository.save(auditLog);
+
+			return;
+		}
+
+		Department targetDepartment;
+
+		if (nextStep.getDepartment() == null) {
+
+			targetDepartment = document.getDepartment();
+
+		} else {
+
+			targetDepartment = nextStep.getDepartment();
+		}
+
+		workflowInstance.setCurrentStep(nextStep.getStepOrder());
+
+		workflowInstance.setCurrentStage(nextStep.getStage());
 
 		workflowInstanceRepository.save(workflowInstance);
 
-		WorkflowTask nextTask = WorkflowTask.builder().workflowInstance(workflowInstance)
-				.department(currentTask.getDepartment()).stage(WorkflowStage.APPROVER).status(TaskStatus.PENDING)
-				.build();
+		WorkflowTask nextTask = WorkflowTask.builder().workflowInstance(workflowInstance).department(targetDepartment)
+				.stage(nextStep.getStage()).stepOrder(nextStep.getStepOrder()).status(TaskStatus.PENDING).build();
 
 		workflowTaskRepository.save(nextTask);
 
-		AuditLog auditLog = AuditLog.builder().documentId(workflowInstance.getDocument().getId())
-				.action(AuditAction.REVIEW_APPROVED).performedBy(reviewer).remarks("Reviewer approved document")
-				.fromStatus(DocumentStatus.SUBMITTED).toStatus(DocumentStatus.UNDER_REVIEW).build();
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.REVIEW_APPROVED)
+				.performedBy(reviewer).remarks("Reviewer approved document").fromStatus(DocumentStatus.SUBMITTED)
+				.toStatus(DocumentStatus.UNDER_REVIEW).build();
 
 		auditLogRepository.save(auditLog);
 	}
@@ -136,100 +311,42 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		Document document = task.getWorkflowInstance().getDocument();
 
+		DocumentCommentDto latestComment = documentCommentService.getLatestComment(document.getId(),
+				CommentType.RESPONSE);
+
 		return ReviewDocumentDto.builder().taskId(task.getId()).documentId(document.getId())
 				.documentNumber(document.getDocumentNumber()).title(document.getTitle())
 				.description(document.getDescription()).submittedBy(document.getOwner().getName())
 				.requestorDepartment(document.getOwner().getDepartment().getDepartmentName())
 				.status(document.getStatus().name()).currentStage(task.getWorkflowInstance().getCurrentStage().name())
+				.latestComment(latestComment != null ? latestComment.getComment() : null)
+
+				.latestCommentBy(latestComment != null ? latestComment.getCommentedBy() : null)
+
+				.latestCommentStage(latestComment != null ? latestComment.getStage() : null)
+
+				.latestCommentDepartment(latestComment != null ? latestComment.getDepartment() : null)
+
+				.latestCommentTime(latestComment != null ? latestComment.getCreatedAt() : null)
+
+				.latestCommentType(latestComment != null ? latestComment.getCommentType() : null)
+
 				.build();
 	}
 
 	@Override
 	@Transactional
-	public void requestInfo(Long taskId, String reviewerEmail) {
+	public void requestInfo(Long taskId, String reviewerEmail, String comment) {
 
-		User reviewer = userRepository.findByEmailAndIsDeletedFalse(reviewerEmail)
-				.orElseThrow(() -> new RuntimeException("Reviewer not found"));
-
-		WorkflowTask task = workflowTaskRepository.findById(taskId)
-				.orElseThrow(() -> new RuntimeException("Task not found"));
-
-		if (task.getStatus() != TaskStatus.PENDING) {
-
-			throw new RuntimeException("Task already processed");
-		}
-
-		task.setStatus(TaskStatus.COMPLETED);
-
-		task.setCompletedAt(LocalDateTime.now());
-
-		task.setActionTakenBy(reviewer);
-
-		workflowTaskRepository.save(task);
-
-		Document document = task.getWorkflowInstance().getDocument();
-
-		document.setStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED);
-
-		documentRepository.save(document);
-
-		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.INFO_REQUESTED)
-				.fromStatus(DocumentStatus.SUBMITTED).toStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED)
-				.performedBy(reviewer).remarks("Additional information requested").build();
-
-		auditLogRepository.save(auditLog);
+		requestInfoInternal(taskId, comment, reviewerEmail, AuditAction.INFO_REQUESTED,
+				"Additional information requested by reviewer");
 	}
 
 	@Override
 	@Transactional
-	public void rejectDocument(Long taskId, String reviewerEmail) {
+	public void rejectDocument(Long taskId, String reviewerEmail, String comment) {
 
-		User reviewer = userRepository.findByEmailAndIsDeletedFalse(reviewerEmail)
-				.orElseThrow(() -> new RuntimeException("Reviewer not found"));
-
-		WorkflowTask task = workflowTaskRepository.findById(taskId)
-				.orElseThrow(() -> new RuntimeException("Task not found"));
-
-		if (task.getStatus() != TaskStatus.PENDING) {
-
-			throw new RuntimeException("Task already processed");
-		}
-
-		// Complete Current Task
-
-		task.setStatus(TaskStatus.COMPLETED);
-
-		task.setCompletedAt(LocalDateTime.now());
-
-		task.setActionTakenBy(reviewer);
-
-		workflowTaskRepository.save(task);
-
-		// Reject Document
-
-		Document document = task.getWorkflowInstance().getDocument();
-
-		document.setStatus(DocumentStatus.REJECTED);
-
-		documentRepository.save(document);
-
-		// Complete Workflow Instance
-
-		WorkflowInstance workflowInstance = task.getWorkflowInstance();
-
-		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
-
-		workflowInstance.setCompletedAt(LocalDateTime.now());
-
-		workflowInstanceRepository.save(workflowInstance);
-
-		// Audit Log
-
-		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.DOCUMENT_REJECTED)
-				.fromStatus(DocumentStatus.SUBMITTED).toStatus(DocumentStatus.REJECTED).performedBy(reviewer)
-				.remarks("Document rejected").build();
-
-		auditLogRepository.save(auditLog);
+		rejectInternal(taskId, comment, reviewerEmail, AuditAction.DOCUMENT_REJECTED, "Document rejected by reviewer");
 	}
 
 	@Override
@@ -292,136 +409,84 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		documentRepository.save(document);
 
-		workflowInstance.setCurrentStage(WorkflowStage.SENIOR_APPROVER);
+		Application application = document.getApplication();
+
+		ApplicationHierarchyMapping mapping = applicationHierarchyMappingRepository
+				.findByApplicationAndIsDeletedFalse(application)
+				.orElseThrow(() -> new RuntimeException("Workflow mapping not found"));
+
+		List<HierarchyStep> hierarchySteps = hierarchyStepRepository
+				.findByHierarchyAndIsDeletedFalseOrderByStepOrderAsc(mapping.getHierarchy());
+
+		HierarchyStep nextStep = hierarchySteps.stream()
+				.filter(step -> step.getStepOrder() > currentTask.getStepOrder()).findFirst().orElse(null);
+
+		// FINAL STEP REACHED
+
+		if (nextStep == null) {
+
+			document.setStatus(DocumentStatus.APPROVED);
+
+			documentRepository.save(document);
+
+			workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+
+			workflowInstance.setCompletedAt(LocalDateTime.now());
+
+			workflowInstanceRepository.save(workflowInstance);
+
+			AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.APPROVER_APPROVED)
+					.performedBy(approver).remarks("Final workflow step approved")
+					.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.APPROVED).build();
+
+			auditLogRepository.save(auditLog);
+
+			return;
+		}
+
+		Department targetDepartment;
+
+		if (nextStep.getDepartment() == null) {
+
+			targetDepartment = document.getDepartment();
+
+		} else {
+
+			targetDepartment = nextStep.getDepartment();
+		}
+
+		workflowInstance.setCurrentStep(nextStep.getStepOrder());
+
+		workflowInstance.setCurrentStage(nextStep.getStage());
 
 		workflowInstanceRepository.save(workflowInstance);
 
-		WorkflowTask nextTask = WorkflowTask.builder().workflowInstance(workflowInstance)
-				.department(currentTask.getDepartment()).stage(WorkflowStage.SENIOR_APPROVER).status(TaskStatus.PENDING)
-				.build();
+		WorkflowTask nextTask = WorkflowTask.builder().workflowInstance(workflowInstance).department(targetDepartment)
+				.stage(nextStep.getStage()).stepOrder(nextStep.getStepOrder()).status(TaskStatus.PENDING).build();
 
 		workflowTaskRepository.save(nextTask);
 
 		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.APPROVER_APPROVED)
-				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.UNDER_REVIEW).performedBy(approver)
-				.remarks("Approved by approver").build();
+				.performedBy(approver).remarks("Approver approved document").fromStatus(DocumentStatus.UNDER_REVIEW)
+				.toStatus(DocumentStatus.UNDER_REVIEW).build();
 
 		auditLogRepository.save(auditLog);
 	}
-	
+
 	@Override
 	@Transactional
-	public void requestInfoByApprover(
-	        Long taskId,
-	        String approverEmail) {
+	public void requestInfoByApprover(Long taskId, String approverEmail, String comment) {
 
-	    User approver =
-	            userRepository
-	                    .findByEmailAndIsDeletedFalse(
-	                            approverEmail)
-	                    .orElseThrow(
-	                            () -> new RuntimeException(
-	                                    "Approver not found"));
-
-	    WorkflowTask task =
-	            workflowTaskRepository
-	                    .findById(taskId)
-	                    .orElseThrow(
-	                            () -> new RuntimeException(
-	                                    "Task not found"));
-
-	    if (task.getStatus()
-	            != TaskStatus.PENDING) {
-
-	        throw new RuntimeException(
-	                "Task already processed");
-	    }
-
-	    task.setStatus(
-	            TaskStatus.COMPLETED);
-
-	    task.setCompletedAt(
-	            LocalDateTime.now());
-
-	    task.setActionTakenBy(
-	            approver);
-
-	    workflowTaskRepository.save(
-	            task);
-
-	    Document document =
-	            task.getWorkflowInstance()
-	                    .getDocument();
-
-	    document.setStatus(
-	            DocumentStatus.ADDITIONAL_INFO_REQUESTED);
-
-	    documentRepository.save(
-	            document);
-
-	    AuditLog auditLog =
-	            AuditLog.builder()
-	                    .documentId(
-	                            document.getId())
-	                    .action(
-	                            AuditAction.INFO_REQUESTED)
-	                    .fromStatus(
-	                            DocumentStatus.UNDER_REVIEW)
-	                    .toStatus(
-	                            DocumentStatus.ADDITIONAL_INFO_REQUESTED)
-	                    .performedBy(
-	                            approver)
-	                    .remarks(
-	                            "Additional information requested by approver")
-	                    .build();
-
-	    auditLogRepository.save(
-	            auditLog);
+		requestInfoInternal(taskId, comment, approverEmail, AuditAction.INFO_REQUESTED,
+				"Additional information requested by approver");
 	}
-	
+
 	@Override
 	@Transactional
-	public void rejectByApprover(Long taskId, String approverEmail) {
+	public void rejectByApprover(Long taskId, String approverEmail, String comment) {
 
-		User approver = userRepository.findByEmailAndIsDeletedFalse(approverEmail)
-				.orElseThrow(() -> new RuntimeException("Approver not found"));
-
-		WorkflowTask task = workflowTaskRepository.findById(taskId)
-				.orElseThrow(() -> new RuntimeException("Task not found"));
-		if (task.getStatus() != TaskStatus.PENDING) {
-
-			throw new RuntimeException("Task already processed");
-		}
-		// Complete Current Task
-		task.setStatus(TaskStatus.COMPLETED);
-		task.setCompletedAt(LocalDateTime.now());
-		task.setActionTakenBy(approver);
-		workflowTaskRepository.save(task);
-		
-		// Reject Document
-		Document document = task.getWorkflowInstance().getDocument();
-		document.setStatus(DocumentStatus.REJECTED);
-		documentRepository.save(document);
-		
-		// Complete Workflow Instance
-		WorkflowInstance workflowInstance = task.getWorkflowInstance();
-		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
-		workflowInstance.setCompletedAt(LocalDateTime.now());
-		workflowInstanceRepository.save(workflowInstance);
-			
-		// Audit Log
-		AuditLog auditLog = AuditLog.builder()
-				.documentId(document.getId())
-				.action(AuditAction.DOCUMENT_REJECTED)
-				.fromStatus(DocumentStatus.UNDER_REVIEW)
-				.toStatus(DocumentStatus.REJECTED)
-				.performedBy(approver)
-				.remarks("Document rejected by approver")
-				.build();
-		auditLogRepository.save(auditLog);
-		}
-		
-	
+		rejectInternal(taskId, comment, approverEmail, AuditAction.DOCUMENT_REJECTED, "Document rejected by approver");
+	}
 
 	@Override
 	public List<ReviewTaskDto> getSeniorApproverTasks(String approverEmail) {
@@ -479,144 +544,89 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		Document document = workflowInstance.getDocument();
 
-		document.setStatus(DocumentStatus.APPROVED);
+		document.setStatus(DocumentStatus.UNDER_REVIEW);
 
 		documentRepository.save(document);
 
-		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
+		Application application = document.getApplication();
 
-		workflowInstance.setCompletedAt(LocalDateTime.now());
+		ApplicationHierarchyMapping mapping = applicationHierarchyMappingRepository
+				.findByApplicationAndIsDeletedFalse(application)
+				.orElseThrow(() -> new RuntimeException("Workflow mapping not found"));
 
-		workflowInstanceRepository.save(workflowInstance);
+		List<HierarchyStep> hierarchySteps = hierarchyStepRepository
+				.findByHierarchyAndIsDeletedFalseOrderByStepOrderAsc(mapping.getHierarchy());
 
-		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.SENIOR_APPROVER_APPROVED)
-				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.APPROVED).performedBy(seniorApprover)
-				.remarks("Approved by senior approver").build();
+		HierarchyStep nextStep = hierarchySteps.stream()
+				.filter(step -> step.getStepOrder() > currentTask.getStepOrder()).findFirst().orElse(null);
 
-		auditLogRepository.save(auditLog);
-	}
-	
-	
-	@Override
-	@Transactional
-	public void requestInfoBySeniorApprover(
-	        Long taskId,
-	        String seniorApproverEmail) {
+		// FINAL STEP REACHED
 
-	    User seniorApprover =
-	            userRepository
-	                    .findByEmailAndIsDeletedFalse(
-	                            seniorApproverEmail)
-	                    .orElseThrow(
-	                            () -> new RuntimeException(
-	                                    "Senior Approver not found"));
+		if (nextStep == null) {
 
-	    WorkflowTask task =
-	            workflowTaskRepository
-	                    .findById(taskId)
-	                    .orElseThrow(
-	                            () -> new RuntimeException(
-	                                    "Task not found"));
+			document.setStatus(DocumentStatus.APPROVED);
 
-	    if (task.getStatus()
-	            != TaskStatus.PENDING) {
+			documentRepository.save(document);
 
-	        throw new RuntimeException(
-	                "Task already processed");
-	    }
+			workflowInstance.setStatus(WorkflowStatus.COMPLETED);
 
-	    task.setStatus(
-	            TaskStatus.COMPLETED);
+			workflowInstance.setCompletedAt(LocalDateTime.now());
 
-	    task.setCompletedAt(
-	            LocalDateTime.now());
+			workflowInstanceRepository.save(workflowInstance);
 
-	    task.setActionTakenBy(
-	            seniorApprover);
+			AuditLog auditLog = AuditLog.builder().documentId(document.getId())
+					.action(AuditAction.SENIOR_APPROVER_APPROVED).performedBy(seniorApprover)
+					.remarks("Final workflow step approved").fromStatus(DocumentStatus.UNDER_REVIEW)
+					.toStatus(DocumentStatus.APPROVED).build();
 
-	    workflowTaskRepository.save(
-	            task);
+			auditLogRepository.save(auditLog);
 
-	    Document document =
-	            task.getWorkflowInstance()
-	                    .getDocument();
-
-	    document.setStatus(
-	            DocumentStatus.ADDITIONAL_INFO_REQUESTED);
-
-	    documentRepository.save(
-	            document);
-
-	    AuditLog auditLog =
-	            AuditLog.builder()
-	                    .documentId(
-	                            document.getId())
-	                    .action(
-	                            AuditAction.INFO_REQUESTED)
-	                    .fromStatus(
-	                            DocumentStatus.UNDER_REVIEW)
-	                    .toStatus(
-	                            DocumentStatus.ADDITIONAL_INFO_REQUESTED)
-	                    .performedBy(
-	                            seniorApprover)
-	                    .remarks(
-	                            "Additional information requested by senior approver")
-	                    .build();
-
-	    auditLogRepository.save(
-	            auditLog);
-	}
-	
-	@Override
-	@Transactional
-	public void rejectBySeniorApprover(Long taskId, String seniorApproverEmail) {
-
-		User seniorApprover = userRepository.findByEmailAndIsDeletedFalse(seniorApproverEmail)
-				.orElseThrow(() -> new RuntimeException("Senior Approver not found"));
-
-		WorkflowTask task = workflowTaskRepository.findById(taskId)
-				.orElseThrow(() -> new RuntimeException("Task not found"));
-
-		if (task.getStatus() != TaskStatus.PENDING) {
-
-			throw new RuntimeException("Task already processed");
+			return;
 		}
 
-		// Complete Current Task
+		Department targetDepartment;
 
-		task.setStatus(TaskStatus.COMPLETED);
+		if (nextStep.getDepartment() == null) {
 
-		task.setCompletedAt(LocalDateTime.now());
+			targetDepartment = document.getDepartment();
 
-		task.setActionTakenBy(seniorApprover);
+		} else {
 
-		workflowTaskRepository.save(task);
+			targetDepartment = nextStep.getDepartment();
+		}
 
-		// Reject Document
+		workflowInstance.setCurrentStep(nextStep.getStepOrder());
 
-		Document document = task.getWorkflowInstance().getDocument();
-
-		document.setStatus(DocumentStatus.REJECTED);
-
-		documentRepository.save(document);
-
-		// Complete Workflow Instance
-
-		WorkflowInstance workflowInstance = task.getWorkflowInstance();
-
-		workflowInstance.setStatus(WorkflowStatus.COMPLETED);
-
-		workflowInstance.setCompletedAt(LocalDateTime.now());
+		workflowInstance.setCurrentStage(nextStep.getStage());
 
 		workflowInstanceRepository.save(workflowInstance);
 
-		// Audit Log
+		WorkflowTask nextTask = WorkflowTask.builder().workflowInstance(workflowInstance).department(targetDepartment)
+				.stage(nextStep.getStage()).stepOrder(nextStep.getStepOrder()).status(TaskStatus.PENDING).build();
 
-		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.DOCUMENT_REJECTED)
-				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.REJECTED).performedBy(seniorApprover)
-				.remarks("Document rejected by senior approver").build();
+		workflowTaskRepository.save(nextTask);
+
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.SENIOR_APPROVER_APPROVED)
+				.performedBy(seniorApprover).remarks("Senior Approver approved document")
+				.fromStatus(DocumentStatus.UNDER_REVIEW).toStatus(DocumentStatus.UNDER_REVIEW).build();
 
 		auditLogRepository.save(auditLog);
 	}
-	
+
+	@Override
+	@Transactional
+	public void requestInfoBySeniorApprover(Long taskId, String seniorApproverEmail, String comment) {
+
+		requestInfoInternal(taskId, comment, seniorApproverEmail, AuditAction.INFO_REQUESTED,
+				"Additional information requested by senior approver");
+	}
+
+	@Override
+	@Transactional
+	public void rejectBySeniorApprover(Long taskId, String seniorApproverEmail, String comment) {
+
+		rejectInternal(taskId, comment, seniorApproverEmail, AuditAction.DOCUMENT_REJECTED,
+				"Document rejected by senior approver");
+	}
+
 }

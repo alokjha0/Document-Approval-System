@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+	<title>Request Details</title>
+
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+	<link rel="stylesheet" th:href="@{/css/style.css}">
+
+</head>
+
+<body>
+
+	<div th:replace="~{fragments/header :: header('Request Details')}">
+	</div>
+
+	<div class="container mt-4">
+
+		<div class="card shadow">
+
+			<div class="card-header">
+
+				<h4 class="mb-0">
+
+					Request Details
+
+				</h4>
+
+			</div>
+
+			<div class="card-body">
+
+				<h5 class="mb-3">
+
+					Request Information
+
+				</h5>
+
+				<div class="row mb-3">
+
+					<div class="col-md-3">
+
+						<strong>Document Number</strong>
+
+					</div>
+
+					<div class="col-md-9" th:text="${document.documentNumber}">
+					</div>
+
+				</div>
+
+				<div class="row mb-3">
+
+					<div class="col-md-3">
+
+						<strong>Department</strong>
+
+					</div>
+
+					<div class="col-md-9" th:text="${document.departmentName}">
+					</div>
+
+				</div>
+
+				<div class="row mb-3">
+
+					<div class="col-md-3">
+
+						<strong>Request Type</strong>
+
+					</div>
+
+					<div class="col-md-9" th:text="${document.applicationName}">
+					</div>
+
+				</div>
+
+				<div class="row mb-3">
+
+					<div class="col-md-3">
+
+						<strong>Request Title</strong>
+
+					</div>
+
+					<div class="col-md-9" th:text="${document.title}">
+					</div>
+
+				</div>
+
+				<div class="row mb-3">
+
+					<div class="col-md-3">
+
+						<strong>Description</strong>
+
+					</div>
+
+					<div class="col-md-9" th:text="${document.description}">
+					</div>
+
+				</div>
+
+				<div class="row mb-3">
+
+					<div class="col-md-3">
+
+						<strong>Status</strong>
+
+					</div>
+
+					<div class="col-md-9">
+
+						<span class="badge bg-secondary" th:if="${document.status == 'DRAFT'}">
+
+							Draft
+
+						</span>
+
+						<span class="badge bg-primary" th:if="${document.status == 'SUBMITTED'}">
+
+							Submitted
+
+						</span>
+
+						<span class="badge bg-warning text-dark" th:if="${document.status == 'UNDER_REVIEW'}">
+
+							Under Review
+
+						</span>
+
+						<span class="badge bg-info" th:if="${document.status == 'ADDITIONAL_INFO_REQUESTED'}">
+
+							Information Requested
+
+						</span>
+
+						<span class="badge bg-success" th:if="${document.status == 'APPROVED'}">
+
+							Approved
+
+						</span>
+
+						<span class="badge bg-danger" th:if="${document.status == 'REJECTED'}">
+
+							Rejected
+
+						</span>
+
+						<span class="badge bg-info" th:if="${document.status == 'RESUBMITTED'}">
+
+							Resubmitted
+
+						</span>
+
+					</div>
+
+				</div>
+
+				<div class="row mb-4">
+
+					<div class="col-md-3">
+
+						<strong>Current Stage</strong>
+
+					</div>
+
+					<div class="col-md-9" th:text="${document.currentStage}">
+					</div>
+
+				</div>
+
+				<hr>
+
+
+
+				<div class="card shadow-sm mb-4" th:if="${document.latestComment != null}">
+
+					<div class="card-header ">
+
+						<h5 class="mb-0" th:if="${document.latestCommentType.name() == 'REQUEST_INFO'}">
+
+							Latest Instruction
+
+						</h5>
+
+
+						<h5 class="mb-0" th:if="${document.latestCommentType.name() == 'REJECTION'}">
+
+							Rejection Reason
+
+						</h5>
+
+					</div>
+
+					<div class="card-body">
+
+					    <!-- Show reviewer/approver name only for instructions -->
+
+					    <div th:if="${document.latestCommentType.name() == 'REQUEST_INFO'}">
+
+					        <h6 class="mb-3">
+
+					            <i class="bi bi-person-circle me-2"></i>
+
+					            <span th:text="${document.latestCommentBy}"></span>
+
+					        </h6>
+
+					    </div>
+
+					    <!-- Show  name only for rejection -->
+
+					    <div th:if="${document.latestCommentType.name() == 'REJECTION'}">
+
+					        <h6 class="mb-3 text-danger">
+
+					            <i class="bi bi-person-circle me-2"></i>
+
+					            <span th:text="${document.latestCommentBy}"></span>
+
+					        </h6>
+
+					    </div>
+
+					    <p class="mb-3"
+					       th:text="${document.latestComment}">
+					    </p>
+
+					    <small class="text-muted">
+
+					        <i class="bi bi-clock me-1"></i>
+
+					        <span th:text="${document.latestCommentTime}">
+					        </span>
+
+					    </small>
+
+					</div>
+				</div>
+
+				<hr>
+
+				<div class="d-flex gap-2">
+
+					<a class="btn btn-primary" th:if="${document.status == 'ADDITIONAL_INFO_REQUESTED'}"
+						th:href="@{/documents/respond/{id}(id=${document.id})}">
+
+						Respond
+
+					</a>
+
+					<a class="btn btn-secondary" th:href="@{/documents}">
+
+						Back to My Requests
+
+					</a>
+
+				</div>
+
+			</div>
+
+		</div>
+
+	</div>
+
+</body>
+
+</html>

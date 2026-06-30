@@ -33,6 +33,9 @@ public class WorkflowInstance {
 
     @Enumerated(EnumType.STRING)
     private WorkflowStage currentStage;
+    
+    @Column(nullable = false)
+    private Integer currentStep;
 
     private LocalDateTime startedAt;
 

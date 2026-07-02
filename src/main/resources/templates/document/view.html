@@ -173,10 +173,60 @@
 				</div>
 
 				<hr>
+				
+				<div class="card shadow-sm mb-4" th:if="${document.status != 'DRAFT'}">
+
+				    <div class="card-header">
+
+				        <h5 class="mb-0">
+				            Document PDF
+				        </h5>
+
+				    </div>
+
+				    <div class="card-body">
+
+				        <div class="d-flex gap-2">
+
+				            <a class="btn btn-primary"
+				               target="_blank"
+				               th:href="@{/documents/{id}/pdf/view(id=${document.id})}">
+
+				                <i class="bi bi-eye"></i>
+
+				                View PDF
+
+				            </a>
+
+				            <a class="btn btn-success"
+				               th:href="@{/documents/{id}/pdf/download(id=${document.id})}">
+
+				                <i class="bi bi-download"></i>
+
+				                Download PDF
+
+				            </a>
+
+				        </div>
+
+				    </div>
+
+				</div>
 
 
 
-				<div class="card shadow-sm mb-4" th:if="${document.latestComment != null}">
+				<div class="card shadow-sm mb-4" th:if="${
+				    document.latestComment != null &&
+				    (
+				        (document.latestCommentType.name() == 'REQUEST_INFO' &&
+				         (document.status == 'ADDITIONAL_INFO_REQUESTED' ||
+				          document.status == 'RESUBMITTED'))
+
+				        ||
+
+				        (document.latestCommentType.name() == 'REJECTION')
+				    )
+				}">
 
 					<div class="card-header ">
 
@@ -197,46 +247,45 @@
 
 					<div class="card-body">
 
-					    <!-- Show reviewer/approver name only for instructions -->
+						<!-- Show reviewer/approver name only for instructions -->
 
-					    <div th:if="${document.latestCommentType.name() == 'REQUEST_INFO'}">
+						<div th:if="${document.latestCommentType.name() == 'REQUEST_INFO'}">
 
-					        <h6 class="mb-3">
+							<h6 class="mb-3">
 
-					            <i class="bi bi-person-circle me-2"></i>
+								<i class="bi bi-person-circle me-2"></i>
 
-					            <span th:text="${document.latestCommentBy}"></span>
+								<span th:text="${document.latestCommentBy}"></span>
 
-					        </h6>
+							</h6>
 
-					    </div>
+						</div>
 
-					    <!-- Show  name only for rejection -->
+						<!-- Show  name only for rejection -->
 
-					    <div th:if="${document.latestCommentType.name() == 'REJECTION'}">
+						<div th:if="${document.latestCommentType.name() == 'REJECTION'}">
 
-					        <h6 class="mb-3 text-danger">
+							<h6 class="mb-3 text-danger">
 
-					            <i class="bi bi-person-circle me-2"></i>
+								<i class="bi bi-person-circle me-2"></i>
 
-					            <span th:text="${document.latestCommentBy}"></span>
+								<span th:text="${document.latestCommentBy}"></span>
 
-					        </h6>
+							</h6>
 
-					    </div>
+						</div>
 
-					    <p class="mb-3"
-					       th:text="${document.latestComment}">
-					    </p>
+						<p class="mb-3" th:text="${document.latestComment}">
+						</p>
 
-					    <small class="text-muted">
+						<small class="text-muted">
 
-					        <i class="bi bi-clock me-1"></i>
+							<i class="bi bi-clock me-1"></i>
 
-					        <span th:text="${document.latestCommentTime}">
-					        </span>
+							<span th:text="${document.latestCommentTime}">
+							</span>
 
-					    </small>
+						</small>
 
 					</div>
 				</div>

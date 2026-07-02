@@ -30,6 +30,9 @@ public class DocumentDto {
     @NotBlank(message = "Description is required")
     @Size(max = 1000)
     private String description;
+    
+    @NotBlank(message = "Document content is required")
+    private String documentContent;
 
     @NotNull(message = "Department is required")
     private Long departmentId;

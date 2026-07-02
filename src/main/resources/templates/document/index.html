@@ -151,7 +151,32 @@
 						</div>
 
 					</div>
+			
+					<div class="row">
 
+					    <div class="col-md-12 mb-3">
+
+					        <label class="form-label">
+
+					            Document Content
+
+					        </label>
+
+					        <textarea
+					            class="form-control"
+					            rows="12"
+					            th:field="*{documentContent}"
+					            placeholder="Write the complete document here">
+					        </textarea>
+
+					        <small class="text-danger"
+					               th:if="${#fields.hasErrors('documentContent')}"
+					               th:errors="*{documentContent}">
+					        </small>
+
+					    </div>
+
+					</div>
 
 
 					<div class="col-md-2 d-flex align-items-end">

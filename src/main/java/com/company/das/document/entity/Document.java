@@ -33,6 +33,9 @@ public class Document {
 
     @Column(length = 1000)
     private String description;
+    
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String documentContent;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

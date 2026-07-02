@@ -20,6 +20,7 @@ import com.company.das.document.dto.DocumentDto;
 import com.company.das.document.entity.Document;
 import com.company.das.document.repository.DocumentRepository;
 import com.company.das.document.service.DocumentService;
+import com.company.das.documentversion.service.DocumentVersionService;
 import com.company.das.user.entity.User;
 import com.company.das.user.repository.UserRepository;
 import com.company.das.workflow.entity.WorkflowInstance;
@@ -59,6 +60,8 @@ public class DocumentServiceImpl implements DocumentService {
 	private final DocumentCommentRepository documentCommentRepository;
 
 	private final DocumentCommentService documentCommentService;
+	
+	private final DocumentVersionService documentVersionService;
 
 	@Override
 	public void createDocument(DocumentDto documentDto, String loggedInUserEmail) {
@@ -75,7 +78,7 @@ public class DocumentServiceImpl implements DocumentService {
 		String documentNumber = generateDocumentNumber();
 
 		Document document = Document.builder().documentNumber(documentNumber).title(documentDto.getTitle())
-				.description(documentDto.getDescription()).department(department).application(application)
+				.description(documentDto.getDescription()).documentContent(documentDto.getDocumentContent()).department(department).application(application)
 				.status(DocumentStatus.DRAFT).owner(owner).build();
 
 		document = documentRepository.save(document);
@@ -140,6 +143,11 @@ public class DocumentServiceImpl implements DocumentService {
 
 			targetDepartment = firstStep.getDepartment();
 		}
+		
+		
+		
+		documentVersionService.createVersion(document);
+
 
 		WorkflowInstance workflowInstance = WorkflowInstance.builder().document(document)
 				.status(WorkflowStatus.IN_PROGRESS).currentStage(firstStep.getStage())
@@ -188,6 +196,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 		return DocumentDto.builder().id(document.getId()).documentNumber(document.getDocumentNumber())
 				.title(document.getTitle()).description(document.getDescription())
+				.documentContent(document.getDocumentContent())
 				.departmentId(document.getDepartment().getId()).applicationId(document.getApplication().getId())
 				.applicationName(document.getApplication().getApplicationName())
 				.departmentName(document.getDepartment().getDepartmentName()).status(document.getStatus().name())
@@ -222,7 +231,9 @@ public class DocumentServiceImpl implements DocumentService {
 		document.setTitle(documentDto.getTitle());
 
 		document.setDescription(documentDto.getDescription());
-
+		
+		document.setDocumentContent(documentDto.getDocumentContent());
+		
 		document.setDepartment(department);
 
 		document.setApplication(application);
@@ -257,10 +268,14 @@ public class DocumentServiceImpl implements DocumentService {
 		}
 
 		document.setDescription(documentDto.getDescription());
+		
+		document.setDocumentContent(documentDto.getDocumentContent());
 
 		document.setStatus(DocumentStatus.RESUBMITTED);
 
 		documentRepository.save(document);
+		
+		documentVersionService.createVersion(document);
 
 		WorkflowInstance workflowInstance = workflowInstanceRepository.findByDocument(document)
 				.orElseThrow(() -> new RuntimeException("Workflow not found"));
@@ -331,7 +346,9 @@ public class DocumentServiceImpl implements DocumentService {
 		}
 
 		DocumentDto dto = DocumentDto.builder().id(document.getId()).documentNumber(document.getDocumentNumber())
-				.title(document.getTitle()).description(document.getDescription()).status(document.getStatus().name())
+				.title(document.getTitle()).description(document.getDescription())
+				.documentContent(document.getDocumentContent())
+				.status(document.getStatus().name())
 				.departmentName(document.getDepartment().getDepartmentName())
 				.applicationName(document.getApplication().getApplicationName()).build();
 

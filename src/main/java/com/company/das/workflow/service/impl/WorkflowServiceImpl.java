@@ -187,8 +187,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.findByDepartmentAndStageAndStatus(department, WorkflowStage.REVIEWER, TaskStatus.PENDING).stream()
 				.map(task ->
 
-				ReviewTaskDto.builder().taskId(task.getId())
+				ReviewTaskDto.builder()
+						.taskId(task.getId())
 						.documentId(task.getWorkflowInstance().getDocument().getId())
+						
 						.workflowInstanceId(task.getWorkflowInstance().getId())
 						.documentNumber(task.getWorkflowInstance().getDocument().getDocumentNumber())
 						.title(task.getWorkflowInstance().getDocument().getTitle())

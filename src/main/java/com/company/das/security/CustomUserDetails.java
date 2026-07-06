@@ -12,50 +12,46 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CustomUserDetails implements UserDetails {
 
-    private final User user;
+	private final User user;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
 
-        return List.of(
-                new SimpleGrantedAuthority(
-                        "ROLE_" + user.getRole().name()
-                )
-        );
-    }
+		return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+	}
 
-    @Override
-    public String getPassword() {
-        return user.getPassword();
-    }
+	@Override
+	public String getPassword() {
+		return user.getPassword();
+	}
 
-    @Override
-    public String getUsername() {
+	@Override
+	public String getUsername() {
 
-        return user.getEmail();
-    }
+		return user.getEmail();
+	}
 
-    @Override
-    public boolean isAccountNonExpired() {
+	@Override
+	public boolean isAccountNonExpired() {
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public boolean isAccountNonLocked() {
+	@Override
+	public boolean isAccountNonLocked() {
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public boolean isCredentialsNonExpired() {
+	@Override
+	public boolean isCredentialsNonExpired() {
 
-        return true;
-    }
+		return true;
+	}
 
-    @Override
-    public boolean isEnabled() {
+	@Override
+	public boolean isEnabled() {
 
-        return !user.getIsDeleted();
-    }
+		return !user.getIsDeleted();
+	}
 }

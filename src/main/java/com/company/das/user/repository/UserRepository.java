@@ -11,24 +11,24 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 
 	Optional<User> findByEmailAndIsDeletedFalse(String email);
-	
-    // Get all non-deleted users (pagination)
-    Page<User> findByIsDeletedFalse(Pageable pageable);
 
-    // Search by name (case-insensitive + non-deleted)
-    Page<User> findByNameContainingIgnoreCaseAndIsDeletedFalse(String keyword, Pageable pageable);
+	// Get all non-deleted users (pagination)
+	Page<User> findByIsDeletedFalse(Pageable pageable);
 
-    //Get single user (non-deleted)
-    Optional<User> findByIdAndIsDeletedFalse(Long id);
+	// Search by name (case-insensitive + non-deleted)
+	Page<User> findByNameContainingIgnoreCaseAndIsDeletedFalse(String keyword, Pageable pageable);
 
-    // Duplicate checks
-    boolean existsByEmailIgnoreCase(String email);
+	// Get single user (non-deleted)
+	Optional<User> findByIdAndIsDeletedFalse(Long id);
 
-    boolean existsByEmailIgnoreCaseAndIsDeletedFalse(String email);
+	// Duplicate checks
+	boolean existsByEmailIgnoreCase(String email);
 
-    boolean existsByEmpIdIgnoreCase(String empId);
+	boolean existsByEmailIgnoreCaseAndIsDeletedFalse(String email);
 
-    boolean existsByEmpIdIgnoreCaseAndIsDeletedFalse(String empId);
-    
-    boolean existsByDepartmentAndIsDeletedFalse(Department department);
+	boolean existsByEmpIdIgnoreCase(String empId);
+
+	boolean existsByEmpIdIgnoreCaseAndIsDeletedFalse(String empId);
+
+	boolean existsByDepartmentAndIsDeletedFalse(Department department);
 }

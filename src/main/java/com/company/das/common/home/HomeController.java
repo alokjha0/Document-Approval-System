@@ -8,20 +8,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 @Controller
 public class HomeController {
 
-    
-    @GetMapping("/")
-    public String home(
-            @RequestParam(required = false) String error,
-            Model model) {
+	@GetMapping("/")
+	public String home(@RequestParam(required = false) String error, Model model) {
 
-        if(error != null) {
+		if (error != null) {
 
-            model.addAttribute(
-                    "error",
-                    "Invalid email or password"
-            );
-        }
+			model.addAttribute("error", "Invalid email or password");
+		}
 
-        return "home/index";
-    }
+		return "home/index";
+	}
 }

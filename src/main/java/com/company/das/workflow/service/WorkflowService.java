@@ -11,7 +11,7 @@ public interface WorkflowService {
 
 	void approveByReviewer(Long taskId, String reviewerEmail);
 
-	ReviewDocumentDto getDocumentForReview(Long taskId, String reviewerEmail);
+	ReviewDocumentDto getDocumentForReview(Long taskId, String email);
 
 	void requestInfo(Long taskId, String reviewerEmail, String comment);
 

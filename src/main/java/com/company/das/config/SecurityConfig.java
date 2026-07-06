@@ -16,63 +16,48 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
-    private final PasswordEncoder passwordEncoder;
+	private final CustomUserDetailsService userDetailsService;
+	private final PasswordEncoder passwordEncoder;
 
-    @Bean
-    public DaoAuthenticationProvider authProvider() {
+	@Bean
+	public DaoAuthenticationProvider authProvider() {
 
-        DaoAuthenticationProvider provider =
-                new DaoAuthenticationProvider(userDetailsService);
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
 
-        provider.setPasswordEncoder(passwordEncoder);
+		provider.setPasswordEncoder(passwordEncoder);
 
-        return provider;
-    }
+		return provider;
+	}
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(
-            HttpSecurity http)
-            throws Exception {
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-    	 http
-         .authorizeHttpRequests(auth -> auth
+		http.authorizeHttpRequests(auth -> auth
 
-             .requestMatchers(
-                     "/",
-                     "/css/**",
-                     "/js/**",
-                     "/images/**"
-             ).permitAll()
+				.requestMatchers("/", "/css/**", "/js/**", "/images/**").permitAll()
 
-             .anyRequest()
-             .authenticated()
-         )
+				.anyRequest().authenticated())
 
-                .formLogin(form -> form
+				.formLogin(form -> form
 
-                        .loginPage("/")
+						.loginPage("/")
 
-                        .loginProcessingUrl("/perform-login")
+						.loginProcessingUrl("/perform-login")
 
-                        .defaultSuccessUrl("/dashboard", true)
+						.defaultSuccessUrl("/dashboard", true)
 
-                        .failureUrl(
-                                "/?error=true"
-                        )
+						.failureUrl("/?error=true")
 
-                        .permitAll()
-                )
+						.permitAll())
 
-                .logout(logout -> logout
+				.logout(logout -> logout
 
-                        .logoutUrl("/logout")
+						.logoutUrl("/logout")
 
-                        .logoutSuccessUrl("/")
+						.logoutSuccessUrl("/")
 
-                        .permitAll()
-                );
+						.permitAll());
 
-        return http.build();
-    }
+		return http.build();
+	}
 }

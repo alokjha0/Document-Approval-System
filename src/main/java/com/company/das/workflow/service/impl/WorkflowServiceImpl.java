@@ -100,11 +100,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 		DocumentComment documentComment = DocumentComment.builder().document(document).workflowTask(task)
 				.comment(comment).commentType(CommentType.REQUEST_INFO).commentedBy(user).build();
 
-		documentCommentRepository.save(documentComment);
+		documentComment = documentCommentRepository.save(documentComment);
 
-		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(action).fromStatus(previousStatus)
-				.toStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED).performedBy(user).remarks(remarks).build();
-
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).documentComment(documentComment)
+				.action(action).fromStatus(previousStatus).toStatus(DocumentStatus.ADDITIONAL_INFO_REQUESTED)
+				.performedBy(user).remarks(remarks).build();
 		auditLogRepository.save(auditLog);
 	}
 
@@ -152,7 +152,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		DocumentComment documentComment = DocumentComment.builder().document(document).workflowTask(task)
 				.comment(comment).commentType(CommentType.REJECTION).commentedBy(user).build();
 
-		documentCommentRepository.save(documentComment);
+		documentComment = documentCommentRepository.save(documentComment);
 
 		// Complete Workflow
 
@@ -163,9 +163,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		workflowInstanceRepository.save(workflowInstance);
 
 		// Audit Log
-
-		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(action).fromStatus(previousStatus)
-				.toStatus(DocumentStatus.REJECTED).performedBy(user).remarks(remarks).build();
+		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).documentComment(documentComment)
+				.action(action).fromStatus(previousStatus).toStatus(DocumentStatus.REJECTED).performedBy(user)
+				.remarks(remarks).build();
 
 		auditLogRepository.save(auditLog);
 	}
@@ -187,10 +187,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.findByDepartmentAndStageAndStatus(department, WorkflowStage.REVIEWER, TaskStatus.PENDING).stream()
 				.map(task ->
 
-				ReviewTaskDto.builder()
-						.taskId(task.getId())
+				ReviewTaskDto.builder().taskId(task.getId())
 						.documentId(task.getWorkflowInstance().getDocument().getId())
-						
+
 						.workflowInstanceId(task.getWorkflowInstance().getId())
 						.documentNumber(task.getWorkflowInstance().getDocument().getDocumentNumber())
 						.title(task.getWorkflowInstance().getDocument().getTitle())
@@ -245,7 +244,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		HierarchyStep nextStep = hierarchySteps.stream()
 				.filter(step -> step.getStepOrder() > currentTask.getStepOrder()).findFirst().orElse(null);
 
-		// NO NEXT STEP -> WORKFLOW COMPLETED
+		//  WORKFLOW COMPLETED
 
 		if (nextStep == null) {
 
@@ -298,15 +297,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
-	public ReviewDocumentDto getDocumentForReview(Long taskId, String reviewerEmail) {
+	public ReviewDocumentDto getDocumentForReview(Long taskId, String email) {
 
-		User reviewer = userRepository.findByEmailAndIsDeletedFalse(reviewerEmail)
+		User currentUser  = userRepository.findByEmailAndIsDeletedFalse(email)
 				.orElseThrow(() -> new RuntimeException("User not found"));
 
 		WorkflowTask task = workflowTaskRepository.findById(taskId)
 				.orElseThrow(() -> new RuntimeException("Task not found"));
 
-		if (!task.getDepartment().getId().equals(reviewer.getDepartment().getId())) {
+		if (!task.getDepartment().getId().equals(currentUser.getDepartment().getId())) {
 
 			throw new RuntimeException("Unauthorized access");
 		}
@@ -316,7 +315,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		DocumentCommentDto latestComment = documentCommentService.getLatestComment(document.getId(),
 				CommentType.RESPONSE);
 
-		return ReviewDocumentDto.builder().taskId(task.getId()).documentId(document.getId())
+		return ReviewDocumentDto.builder().id(document.getId()).taskId(task.getId()).documentId(document.getId())
 				.documentNumber(document.getDocumentNumber()).title(document.getTitle())
 				.description(document.getDescription()).submittedBy(document.getOwner().getName())
 				.requestorDepartment(document.getOwner().getDepartment().getDepartmentName())

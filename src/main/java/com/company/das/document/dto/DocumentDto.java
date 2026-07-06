@@ -14,49 +14,49 @@ import lombok.*;
 @Builder
 public class DocumentDto {
 
-    private Long id;
-    
-    @NotNull(message = "Application is required")
-    private Long applicationId;
-    
-    private String applicationName;
-    
-    private String documentNumber;
+	private Long id;
 
-    @NotBlank(message = "Title is required")
-    @Size(max = 200)
-    private String title;
+	@NotNull(message = "Application is required")
+	private Long applicationId;
 
-    @NotBlank(message = "Description is required")
-    @Size(max = 1000)
-    private String description;
-    
-    @NotBlank(message = "Document content is required")
-    private String documentContent;
+	private String applicationName;
 
-    @NotNull(message = "Department is required")
-    private Long departmentId;
-    
-    private String status;
-    
-    private String currentStage;
+	private String documentNumber;
 
-    private String departmentName;
-    
+	@NotBlank(message = "Title is required")
+	@Size(max = 200)
+	private String title;
+
+	@NotBlank(message = "Description is required")
+	@Size(max = 1000)
+	private String description;
+
+	@NotBlank(message = "Document content is required")
+	private String documentContent;
+
+	@NotNull(message = "Department is required")
+	private Long departmentId;
+
+	private String status;
+
+	private String currentStage;
+
+	private String departmentName;
+
 //Additional fields for comments and workflow
-    
-    private String latestComment;
 
-    private String latestCommentBy;
+	private String latestComment;
 
-    private String latestCommentStage;
+	private String latestCommentBy;
 
-    private String latestCommentDepartment;
+	private String latestCommentStage;
 
-    private String latestCommentTime;
-    
-    private String responseComment;
-    
-    private CommentType latestCommentType;
+	private String latestCommentDepartment;
+
+	private String latestCommentTime;
+
+	private String responseComment;
+
+	private CommentType latestCommentType;
 
 }

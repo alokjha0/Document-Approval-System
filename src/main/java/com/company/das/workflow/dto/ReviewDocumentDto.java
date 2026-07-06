@@ -11,6 +11,8 @@ import lombok.*;
 @Builder
 public class ReviewDocumentDto {
 
+	private Long id; 
+	
     private Long taskId;
 
     private Long documentId;

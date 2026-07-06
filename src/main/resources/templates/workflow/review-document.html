@@ -132,9 +132,11 @@
 
 				    <div class="card-header">
 				        <h5 class="mb-0">
-				            Document PDF
+				            Current Document
 				        </h5>
 				    </div>
+					
+					
 
 				    <div class="card-body">
 
@@ -163,7 +165,41 @@
 
 				</div>
 				
+				<div class="card shadow-sm mb-4">
 
+				    <div class="card-header">
+
+				        <h5 class="mb-0">
+
+				            <i class="bi bi-clock-history me-2"></i>
+
+				            Workflow History
+
+				        </h5>
+
+				    </div>
+
+				    <div class="card-body">
+
+				        <p class="text-muted mb-3">
+
+				            View the complete workflow history including
+				            approvals, comments, responses and PDF versions.
+
+				        </p>
+
+				        <a class="btn btn-outline-primary"
+				           th:href="@{/workflow/reviewer/{taskId}/workflow-history(taskId=${document.taskId})}">
+
+				            <i class="bi bi-arrow-right-circle me-2"></i>
+
+				            View Workflow History
+
+				        </a>
+
+				    </div>
+
+				</div> 
 				<div class="card shadow-sm mb-4" th:if="${document.latestComment != null}">
 
 					<div class="card-header bg-light-warning">

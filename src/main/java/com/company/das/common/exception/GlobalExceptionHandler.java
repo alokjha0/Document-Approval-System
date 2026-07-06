@@ -9,23 +9,21 @@ import org.springframework.web.servlet.view.RedirectView;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public RedirectView handleRuntimeException(
-            RuntimeException ex,
-            RedirectAttributes redirectAttributes,
-            HttpServletRequest request) {
+	@ExceptionHandler(RuntimeException.class)
+	public RedirectView handleRuntimeException(RuntimeException ex, RedirectAttributes redirectAttributes,
+			HttpServletRequest request) {
 
-        // Add error message
-        redirectAttributes.addFlashAttribute("error", ex.getMessage());
+		// Add error message
+		redirectAttributes.addFlashAttribute("error", ex.getMessage());
 
-        // Get previous URL (where error occurred)
-        String referer = request.getHeader("Referer");
+		// Get previous URL (where error occurred)
+		String referer = request.getHeader("Referer");
 
-        // Fallback if null
-        if (referer == null || referer.isEmpty()) {
-            referer = "/";
-        }
+		// Fallback if null
+		if (referer == null || referer.isEmpty()) {
+			referer = "/";
+		}
 
-        return new RedirectView(referer);
-    }
+		return new RedirectView(referer);
+	}
 }

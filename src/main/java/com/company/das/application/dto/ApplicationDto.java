@@ -9,7 +9,7 @@ import lombok.*;
 @Builder
 public class ApplicationDto {
 
-    private Long id;
+	private Long id;
 
-    private String applicationName;
+	private String applicationName;
 }

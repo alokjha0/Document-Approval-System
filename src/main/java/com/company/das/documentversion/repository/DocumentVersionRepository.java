@@ -15,5 +15,6 @@ public interface DocumentVersionRepository extends JpaRepository<DocumentVersion
     List<DocumentVersion> findByDocumentOrderByVersionNumberDesc(Document document);
 
     Optional<DocumentVersion> findTopByDocumentOrderByVersionNumberDesc(Document document);
+    
 
 }

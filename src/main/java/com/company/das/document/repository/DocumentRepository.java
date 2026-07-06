@@ -11,24 +11,14 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DocumentRepository
-        extends JpaRepository<Document, Long> {
+public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-    boolean existsByDocumentNumber(
-            String documentNumber
-    );
-    
-    Optional<Document> findByIdAndStatus(
-            Long id,
-            DocumentStatus status
-    );
+	boolean existsByDocumentNumber(String documentNumber);
 
-    List<Document> findByOwnerAndStatus(
-            User owner,
-            DocumentStatus status
-    );
-    List<Document> findByOwnerOrderByCreatedAtDesc(
-            User owner
-    );
-    
+	Optional<Document> findByIdAndStatus(Long id, DocumentStatus status);
+
+	List<Document> findByOwnerAndStatus(User owner, DocumentStatus status);
+
+	List<Document> findByOwnerOrderByCreatedAtDesc(User owner);
+
 }

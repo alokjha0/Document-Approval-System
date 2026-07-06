@@ -9,13 +9,7 @@ import com.company.das.common.enums.TaskStatus;
 import com.company.das.common.enums.WorkflowStage;
 import com.company.das.department.entity.Department;
 
-public interface WorkflowTaskRepository
-        extends JpaRepository<WorkflowTask, Long> {
-	
-	 List<WorkflowTask>
-	    findByDepartmentAndStageAndStatus(
-	            Department department,
-	            WorkflowStage stage,
-	            TaskStatus status
-	    );
+public interface WorkflowTaskRepository extends JpaRepository<WorkflowTask, Long> {
+
+	List<WorkflowTask> findByDepartmentAndStageAndStatus(Department department, WorkflowStage stage, TaskStatus status);
 }

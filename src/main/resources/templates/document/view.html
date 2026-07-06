@@ -179,7 +179,7 @@
 				    <div class="card-header">
 
 				        <h5 class="mb-0">
-				            Document PDF
+				            Current Document 
 				        </h5>
 
 				    </div>
@@ -288,6 +288,44 @@
 						</small>
 
 					</div>
+				</div>
+				
+				<div class="card shadow-sm mb-4"
+				     th:if="${document.status != 'DRAFT'}">
+
+				    <div class="card-header">
+
+				        <h5 class="mb-0">
+
+				            <i class="bi bi-clock-history me-2"></i>
+
+				            Workflow History
+
+				        </h5>
+
+				    </div>
+
+				    <div class="card-body">
+
+				        <p class="text-muted mb-3">
+
+				            View the complete workflow timeline including
+				            approvals, requests for information, responses,
+				            comments, and all PDF versions.
+
+				        </p>
+
+				        <a class="btn btn-outline-primary"
+				           th:href="@{/documents/{id}/workflow-history(id=${document.id})}">
+
+				            <i class="bi bi-arrow-right-circle me-2"></i>
+
+				            View Workflow History
+
+				        </a>
+
+				    </div>
+
 				</div>
 
 				<hr>

@@ -3,6 +3,8 @@ package com.company.das.document.controller;
 import com.company.das.department.service.DepartmentService;
 import com.company.das.document.dto.DocumentDto;
 import com.company.das.document.service.DocumentService;
+import com.company.das.workflow.service.WorkflowHistoryService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,8 @@ public class DocumentController {
 	private final DocumentService documentService;
 
 	private final DepartmentService departmentService;
+
+	private final WorkflowHistoryService workflowHistoryService;
 
 	@GetMapping
 	public String documentPage(Model model, Authentication authentication) {
@@ -95,22 +99,15 @@ public class DocumentController {
 
 		return "document/respond";
 	}
-	
+
 	@PostMapping("/respond/{id}")
-	public String submitResponse(
-	        @PathVariable Long id,
-	        @ModelAttribute("documentDto") DocumentDto documentDto,
-	        Authentication authentication) {
+	public String submitResponse(@PathVariable Long id, @ModelAttribute("documentDto") DocumentDto documentDto,
+			Authentication authentication) {
 
-	    documentService.submitResponse(
-	            id,
-	            documentDto,
-	            authentication.getName());
+		documentService.submitResponse(id, documentDto, authentication.getName());
 
-	    return "redirect:/documents";
+		return "redirect:/documents";
 	}
-
-	
 
 	@GetMapping("/view/{id}")
 	public String viewDocument(@PathVariable Long id, Authentication authentication, Model model) {
@@ -118,5 +115,17 @@ public class DocumentController {
 		model.addAttribute("document", documentService.getDocumentDetails(id, authentication.getName()));
 
 		return "document/view";
+	}
+
+	@GetMapping("/{id}/workflow-history")
+	public String viewWorkflowHistory(@PathVariable Long id, Authentication authentication, Model model) {
+
+		model.addAttribute("document", documentService.getDocumentDetails(id, authentication.getName()));
+
+		model.addAttribute("workflowHistory", workflowHistoryService.getWorkflowHistory(id));
+
+		model.addAttribute("backUrl", "/documents/view/" + id);
+
+		return "document/workflow-history";
 	}
 }

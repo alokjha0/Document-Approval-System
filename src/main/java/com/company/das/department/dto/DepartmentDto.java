@@ -12,20 +12,11 @@ import lombok.*;
 @Builder
 public class DepartmentDto {
 
-    private Long id;
+	private Long id;
 
-    @NotBlank(
-            message = "Department name is required"
-    )
-    @Size(
-            min = 1,
-            max = 100,
-            message = "Department name must be between 1 and 100 characters"
-    )
-    @Pattern(
-            regexp = ".*\\S.*",
-            message = "Department name cannot contain only spaces"
-    )
-    private String departmentName;
+	@NotBlank(message = "Department name is required")
+	@Size(min = 1, max = 100, message = "Department name must be between 1 and 100 characters")
+	@Pattern(regexp = ".*\\S.*", message = "Department name cannot contain only spaces")
+	private String departmentName;
 
 }

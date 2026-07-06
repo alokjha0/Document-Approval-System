@@ -10,6 +10,6 @@ import com.company.das.application.entity.Application;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-List<Application> findByDepartmentIdAndIsDeletedFalse(Long departmentId);
+	List<Application> findByDepartmentIdAndIsDeletedFalse(Long departmentId);
 
 }

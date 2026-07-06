@@ -6,7 +6,6 @@ import java.util.List;
 
 public interface ApplicationService {
 
-    List<ApplicationDto>
-    getApplicationsByDepartment(Long departmentId);
+	List<ApplicationDto> getApplicationsByDepartment(Long departmentId);
 
 }

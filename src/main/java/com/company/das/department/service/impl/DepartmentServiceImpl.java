@@ -58,21 +58,19 @@ public class DepartmentServiceImpl implements DepartmentService {
 	@Override
 	public void deleteDepartment(Long id) {
 
-	    Department department = departmentRepository.findByIdAndIsDeletedFalse(id)
-	            .orElseThrow(() -> new ResourceNotFoundException("Department not found"));
+		Department department = departmentRepository.findByIdAndIsDeletedFalse(id)
+				.orElseThrow(() -> new ResourceNotFoundException("Department not found"));
 
-	    boolean userExists =
-	            userRepository.existsByDepartmentAndIsDeletedFalse(department);
+		boolean userExists = userRepository.existsByDepartmentAndIsDeletedFalse(department);
 
-	    if (userExists) {
-	        throw new IllegalStateException(
-	                "Cannot delete department. Users are associated with this department.");
-	    }
+		if (userExists) {
+			throw new IllegalStateException("Cannot delete department. Users are associated with this department.");
+		}
 
-	    department.setIsDeleted(true);
-	    department.setDeletedAt(LocalDateTime.now());
+		department.setIsDeleted(true);
+		department.setDeletedAt(LocalDateTime.now());
 
-	    departmentRepository.save(department);
+		departmentRepository.save(department);
 	}
 
 	@Override
@@ -103,22 +101,14 @@ public class DepartmentServiceImpl implements DepartmentService {
 		return departments.map(department -> DepartmentDto.builder().id(department.getId())
 				.departmentName(department.getDepartmentName()).build());
 	}
-	
+
 	@Override
 	public List<DepartmentDto> getAllDepartments() {
 
-	    return departmentRepository
-	            .findByIsDeletedFalse()
-	            .stream()
-	            .map(department ->
+		return departmentRepository.findByIsDeletedFalse().stream().map(department ->
 
-	                    DepartmentDto.builder()
-	                            .id(department.getId())
-	                            .departmentName(
-	                                    department.getDepartmentName())
-	                            .build()
+		DepartmentDto.builder().id(department.getId()).departmentName(department.getDepartmentName()).build()
 
-	            )
-	            .toList();
+		).toList();
 	}
 }

@@ -5,7 +5,6 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-
 @Entity
 @Table(name = "departments")
 @Getter
@@ -15,41 +14,36 @@ import java.time.LocalDateTime;
 @Builder
 public class Department {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Column(name = "department_name", nullable = false, length = 100)
+	private String departmentName;
 
-    @Column(
-            name = "department_name",
-            nullable = false,
-            length = 100
-    )
-    private String departmentName;
+	@Column(nullable = false)
+	private Boolean isDeleted = false;
 
-    @Column(nullable = false)
-    private Boolean isDeleted = false;
+	private LocalDateTime createdAt;
 
-    private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
 
-    private LocalDateTime updatedAt;
+	private LocalDateTime deletedAt;
 
-    private LocalDateTime deletedAt;
+	@PrePersist
+	public void prePersist() {
 
-    @PrePersist
-    public void prePersist() {
+		this.createdAt = LocalDateTime.now();
+		this.updatedAt = LocalDateTime.now();
 
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+		if (this.isDeleted == null) {
+			this.isDeleted = false;
+		}
+	}
 
-        if (this.isDeleted == null) {
-            this.isDeleted = false;
-        }
-    }
+	@PreUpdate
+	public void preUpdate() {
 
-    @PreUpdate
-    public void preUpdate() {
-
-        this.updatedAt = LocalDateTime.now();
-    }
+		this.updatedAt = LocalDateTime.now();
+	}
 }

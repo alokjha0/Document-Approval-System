@@ -16,22 +16,20 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/documents")
 public class PdfController {
 
-    private final PdfService pdfService;
+	private final PdfService pdfService;
 
-    @GetMapping("/{documentId}/pdf/view")
-    public ResponseEntity<Resource> viewPdf(
-            @PathVariable Long documentId) {
+	@GetMapping("/{documentId}/pdf/view")
+	public ResponseEntity<Resource> viewPdf(@PathVariable Long documentId) {
 
-        return pdfService.viewPdf(documentId);
+		return pdfService.viewPdf(documentId);
 
-    }
+	}
 
-    @GetMapping("/{documentId}/pdf/download")
-    public ResponseEntity<Resource> downloadPdf(
-            @PathVariable Long documentId) {
+	@GetMapping("/{documentId}/pdf/download")
+	public ResponseEntity<Resource> downloadPdf(@PathVariable Long documentId) {
 
-        return pdfService.downloadPdf(documentId);
+		return pdfService.downloadPdf(documentId);
 
-    }
+	}
 
 }

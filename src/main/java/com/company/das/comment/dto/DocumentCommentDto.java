@@ -10,17 +10,17 @@ import lombok.*;
 @Builder
 public class DocumentCommentDto {
 
-    private Long id;
+	private Long id;
 
-    private String comment;
+	private String comment;
 
-    private CommentType commentType;
+	private CommentType commentType;
 
-    private String commentedBy;
+	private String commentedBy;
 
-    private String stage;
+	private String stage;
 
-    private String department;
+	private String department;
 
-    private String createdAt;
+	private String createdAt;
 }

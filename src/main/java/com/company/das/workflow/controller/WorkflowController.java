@@ -1,5 +1,7 @@
 package com.company.das.workflow.controller;
 
+import com.company.das.workflow.dto.ReviewDocumentDto;
+import com.company.das.workflow.service.WorkflowHistoryService;
 import com.company.das.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -17,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class WorkflowController {
 
 	private final WorkflowService workflowService;
+
+	private final WorkflowHistoryService workflowHistoryService;
 
 	@GetMapping("/reviewer")
 	public String reviewerDashboard(Authentication authentication, Model model) {
@@ -141,16 +145,53 @@ public class WorkflowController {
 	}
 
 	@PostMapping("/senior-approver/reject/{taskId}")
-	public String rejectBySeniorApprover(
-	        @PathVariable Long taskId,
-	        @RequestParam String comment,
-	        Authentication authentication) {
+	public String rejectBySeniorApprover(@PathVariable Long taskId, @RequestParam String comment,
+			Authentication authentication) {
 
-	    workflowService.rejectBySeniorApprover(
-	            taskId,
-	            authentication.getName(),
-	            comment);
+		workflowService.rejectBySeniorApprover(taskId, authentication.getName(), comment);
 
-	    return "redirect:/workflow/senior-approver";
+		return "redirect:/workflow/senior-approver";
+	}
+
+	@GetMapping("/reviewer/{taskId}/workflow-history")
+	public String reviewerWorkflowHistory(@PathVariable Long taskId, Authentication authentication, Model model) {
+
+		ReviewDocumentDto document = workflowService.getDocumentForReview(taskId, authentication.getName());
+
+		model.addAttribute("document", document);
+
+		model.addAttribute("workflowHistory", workflowHistoryService.getWorkflowHistory(document.getDocumentId()));
+
+		model.addAttribute("backUrl", "/workflow/review/" + taskId);
+
+		return "document/workflow-history";
+	}
+
+	@GetMapping("/approver/{taskId}/workflow-history")
+	public String approverWorkflowHistory(@PathVariable Long taskId, Authentication authentication, Model model) {
+
+		ReviewDocumentDto document = workflowService.getDocumentForReview(taskId, authentication.getName());
+
+		model.addAttribute("document", document);
+
+		model.addAttribute("workflowHistory", workflowHistoryService.getWorkflowHistory(document.getDocumentId()));
+
+		model.addAttribute("backUrl", "/workflow/approver/review/" + taskId);
+
+		return "document/workflow-history";
+	}
+
+	@GetMapping("/senior-approver/{taskId}/workflow-history")
+	public String seniorApproverWorkflowHistory(@PathVariable Long taskId, Authentication authentication, Model model) {
+
+		ReviewDocumentDto document = workflowService.getDocumentForReview(taskId, authentication.getName());
+
+		model.addAttribute("document", document);
+
+		model.addAttribute("workflowHistory", workflowHistoryService.getWorkflowHistory(document.getDocumentId()));
+
+		model.addAttribute("backUrl", "/workflow/senior-approver/review/" + taskId);
+
+		return "document/workflow-history";
 	}
 }

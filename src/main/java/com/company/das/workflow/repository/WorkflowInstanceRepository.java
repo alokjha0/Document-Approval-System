@@ -7,8 +7,6 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface WorkflowInstanceRepository
-        extends JpaRepository<WorkflowInstance, Long> {
-	Optional<WorkflowInstance> findByDocument(
-	        Document document);
+public interface WorkflowInstanceRepository extends JpaRepository<WorkflowInstance, Long> {
+	Optional<WorkflowInstance> findByDocument(Document document);
 }

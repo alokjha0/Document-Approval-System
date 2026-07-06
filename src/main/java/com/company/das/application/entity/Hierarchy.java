@@ -14,41 +14,38 @@ import java.time.LocalDateTime;
 @Builder
 public class Hierarchy {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(
-            nullable = false,
-            unique = true
-    )
-    private String hierarchyName;
+	@Column(nullable = false, unique = true)
+	private String hierarchyName;
 
-    private String description;
+	private String description;
 
-    @Column(nullable = false)
-    private Boolean isDeleted = false;
+	@Column(nullable = false)
+	private Boolean isDeleted = false;
 
-    private LocalDateTime createdAt;
+	private LocalDateTime createdAt;
 
-    private LocalDateTime updatedAt;
+	private LocalDateTime updatedAt;
 
-    private LocalDateTime deletedAt;
+	private LocalDateTime deletedAt;
 
-    @PrePersist
-    public void prePersist() {
+	@PrePersist
+	public void prePersist() {
 
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
 
-        if (isDeleted == null) {
-            isDeleted = false;
-        }
-    }
+		if (isDeleted == null) {
+			isDeleted = false;
+		}
+	}
 
-    @PreUpdate
-    public void preUpdate() {
+	@PreUpdate
+	public void preUpdate() {
 
-        updatedAt = LocalDateTime.now();
-    }
+		updatedAt = LocalDateTime.now();
+	}
 }

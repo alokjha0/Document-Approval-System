@@ -20,4 +20,6 @@ public interface DocumentCommentRepository extends JpaRepository<DocumentComment
 
 	Optional<DocumentComment> findTopByDocumentAndCommentTypeOrderByCreatedAtDesc(Document document,
 			CommentType commentType);
+
+	List<DocumentComment> findByDocumentIdOrderByCreatedAtAsc(Long documentId);
 }

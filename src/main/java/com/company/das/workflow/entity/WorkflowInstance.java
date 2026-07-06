@@ -17,33 +17,30 @@ import java.time.LocalDateTime;
 @Builder
 public class WorkflowInstance {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @OneToOne
-    @JoinColumn(
-            name = "document_id",
-            nullable = false
-    )
-    private Document document;
+	@OneToOne
+	@JoinColumn(name = "document_id", nullable = false)
+	private Document document;
 
-    @Enumerated(EnumType.STRING)
-    private WorkflowStatus status;
+	@Enumerated(EnumType.STRING)
+	private WorkflowStatus status;
 
-    @Enumerated(EnumType.STRING)
-    private WorkflowStage currentStage;
-    
-    @Column(nullable = false)
-    private Integer currentStep;
+	@Enumerated(EnumType.STRING)
+	private WorkflowStage currentStage;
 
-    private LocalDateTime startedAt;
+	@Column(nullable = false)
+	private Integer currentStep;
 
-    private LocalDateTime completedAt;
+	private LocalDateTime startedAt;
 
-    @PrePersist
-    public void prePersist() {
+	private LocalDateTime completedAt;
 
-        startedAt = LocalDateTime.now();
-    }
+	@PrePersist
+	public void prePersist() {
+
+		startedAt = LocalDateTime.now();
+	}
 }

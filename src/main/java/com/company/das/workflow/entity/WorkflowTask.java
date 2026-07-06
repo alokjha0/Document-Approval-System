@@ -18,48 +18,41 @@ import java.time.LocalDateTime;
 @Builder
 public class WorkflowTask {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne
-    @JoinColumn(
-            name = "workflow_instance_id",
-            nullable = false
-    )
-    private WorkflowInstance workflowInstance;
+	@ManyToOne
+	@JoinColumn(name = "workflow_instance_id", nullable = false)
+	private WorkflowInstance workflowInstance;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "department_id",
-            nullable = false
-    )
-    private Department department;
-    
-    @ManyToOne
-    @JoinColumn(name = "action_taken_by")
-    private User actionTakenBy;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "department_id", nullable = false)
+	private Department department;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private WorkflowStage stage;
-    
-    @Column(nullable = false)
-    private Integer stepOrder;
+	@ManyToOne
+	@JoinColumn(name = "action_taken_by")
+	private User actionTakenBy;
 
-    @Builder.Default
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TaskStatus status = TaskStatus.PENDING;
-    
-    
-    private LocalDateTime assignedAt;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private WorkflowStage stage;
 
-    private LocalDateTime completedAt;
+	@Column(nullable = false)
+	private Integer stepOrder;
 
-    @PrePersist
-    public void prePersist() {
+	@Builder.Default
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private TaskStatus status = TaskStatus.PENDING;
 
-        assignedAt = LocalDateTime.now();
-    }
+	private LocalDateTime assignedAt;
+
+	private LocalDateTime completedAt;
+
+	@PrePersist
+	public void prePersist() {
+
+		assignedAt = LocalDateTime.now();
+	}
 }

@@ -12,25 +12,16 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class ApplicationServiceImpl
-        implements ApplicationService {
+public class ApplicationServiceImpl implements ApplicationService {
 
-    private final ApplicationRepository applicationRepository;
+	private final ApplicationRepository applicationRepository;
 
-    @Override
-    public List<ApplicationDto>
-    getApplicationsByDepartment(Long departmentId) {
+	@Override
+	public List<ApplicationDto> getApplicationsByDepartment(Long departmentId) {
 
-        return applicationRepository
-                .findByDepartmentIdAndIsDeletedFalse(
-                        departmentId)
-                .stream()
-                .map(application ->
-                        ApplicationDto.builder()
-                                .id(application.getId())
-                                .applicationName(
-                                        application.getApplicationName())
-                                .build())
-                .toList();
-    }
+		return applicationRepository.findByDepartmentIdAndIsDeletedFalse(departmentId).stream()
+				.map(application -> ApplicationDto.builder().id(application.getId())
+						.applicationName(application.getApplicationName()).build())
+				.toList();
+	}
 }

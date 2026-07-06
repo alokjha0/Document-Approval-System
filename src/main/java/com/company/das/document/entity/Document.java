@@ -18,58 +18,52 @@ import java.time.LocalDateTime;
 @Builder
 public class Document {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(
-            unique = true,
-            nullable = false
-    )
-    private String documentNumber;
+	@Column(unique = true, nullable = false)
+	private String documentNumber;
 
-    @Column(nullable = false)
-    private String title;
+	@Column(nullable = false)
+	private String title;
 
-    @Column(length = 1000)
-    private String description;
-    
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String documentContent;
+	@Column(length = 1000)
+	private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private DocumentStatus status;
+	@Column(columnDefinition = "TEXT", nullable = false)
+	private String documentContent;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id")
-    private User owner;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private DocumentStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department_id")
-    private Department department;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(
-            name = "application_id",
-            nullable = false
-    )
-    private Application application;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "owner_id")
+	private User owner;
 
-    private LocalDateTime createdAt;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "department_id")
+	private Department department;
 
-    private LocalDateTime updatedAt;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "application_id", nullable = false)
+	private Application application;
 
-    @PrePersist
-    public void prePersist() {
+	private LocalDateTime createdAt;
 
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
+	private LocalDateTime updatedAt;
 
-    @PreUpdate
-    public void preUpdate() {
+	@PrePersist
+	public void prePersist() {
 
-        updatedAt = LocalDateTime.now();
-    }
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	public void preUpdate() {
+
+		updatedAt = LocalDateTime.now();
+	}
 }

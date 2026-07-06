@@ -1,7 +1,9 @@
 package com.company.das.audit.entity;
 
+import com.company.das.comment.entity.DocumentComment;
 import com.company.das.common.enums.AuditAction;
 import com.company.das.common.enums.DocumentStatus;
+import com.company.das.documentversion.entity.DocumentVersion;
 import com.company.das.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,34 +19,42 @@ import java.time.LocalDateTime;
 @Builder
 public class AuditLog {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false)
-    private Long documentId;
+	@Column(nullable = false)
+	private Long documentId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AuditAction action;
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
+	private AuditAction action;
 
-    @Enumerated(EnumType.STRING)
-    private DocumentStatus fromStatus;
+	@Enumerated(EnumType.STRING)
+	private DocumentStatus fromStatus;
 
-    @Enumerated(EnumType.STRING)
-    private DocumentStatus toStatus;
+	@Enumerated(EnumType.STRING)
+	private DocumentStatus toStatus;
 
-    @Column(length = 1000)
-    private String remarks;
+	@Column(length = 1000)
+	private String remarks;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "performed_by")
-    private User performedBy;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "performed_by")
+	private User performedBy;
 
-    private LocalDateTime actionAt;
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "document_comment_id")
+	private DocumentComment documentComment;
 
-    @PrePersist
-    public void prePersist() {
-        actionAt = LocalDateTime.now();
-    }
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "document_version_id")
+	private DocumentVersion documentVersion;
+
+	private LocalDateTime actionAt;
+
+	@PrePersist
+	public void prePersist() {
+		actionAt = LocalDateTime.now();
+	}
 }

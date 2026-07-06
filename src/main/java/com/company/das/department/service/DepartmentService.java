@@ -17,6 +17,6 @@ public interface DepartmentService {
 	DepartmentDto getDepartmentById(Long id);
 
 	Page<DepartmentDto> getDepartments(String keyword, int page, int size);
-	
+
 	List<DepartmentDto> getAllDepartments();
 }

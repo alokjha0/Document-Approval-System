@@ -12,15 +12,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ApplicationController {
 
-    private final ApplicationService applicationService;
+	private final ApplicationService applicationService;
 
-    @GetMapping("/by-department/{departmentId}")
-    public List<ApplicationDto>
-    getApplicationsByDepartment(
-            @PathVariable Long departmentId) {
+	@GetMapping("/by-department/{departmentId}")
+	public List<ApplicationDto> getApplicationsByDepartment(@PathVariable Long departmentId) {
 
-        return applicationService
-                .getApplicationsByDepartment(
-                        departmentId);
-    }
+		return applicationService.getApplicationsByDepartment(departmentId);
+	}
 }

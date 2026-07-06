@@ -6,7 +6,6 @@ import org.springframework.stereotype.Repository;
 import com.company.das.application.entity.Hierarchy;
 
 @Repository
-public interface HierarchyRepository
-        extends JpaRepository<Hierarchy, Long> {
+public interface HierarchyRepository extends JpaRepository<Hierarchy, Long> {
 
 }

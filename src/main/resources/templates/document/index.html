@@ -9,6 +9,8 @@
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
 	<!-- JS -->
+
+	<script th:src="@{/ckeditor/ckeditor.js}"></script>
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
 	</script>
 
@@ -136,12 +138,12 @@
 
 							<label class="form-label">
 
-								Request Description
+								Request Summary
 
 							</label>
 
 							<textarea class="form-control" rows="2" th:field="*{description}"
-								placeholder="Enter Description">
+								placeholder="Enter a brief summary of your request">
                         </textarea>
 
 							<small class="text-danger" th:if="${#fields.hasErrors('description')}"
@@ -151,30 +153,26 @@
 						</div>
 
 					</div>
-			
+
 					<div class="row">
 
-					    <div class="col-md-12 mb-3">
+						<div class="col-md-12 mb-3">
 
-					        <label class="form-label">
+							<label class="form-label">
 
-					            Document Content
+								Document Editor
 
-					        </label>
+							</label>
 
-					        <textarea
-					            class="form-control"
-					            rows="12"
-					            th:field="*{documentContent}"
-					            placeholder="Write the complete document here">
-					        </textarea>
+							<textarea id="documentEditor" class="form-control" rows="12" th:field="*{documentContent}"
+								placeholder="Compose the complete document here...">
+							</textarea>
 
-					        <small class="text-danger"
-					               th:if="${#fields.hasErrors('documentContent')}"
-					               th:errors="*{documentContent}">
-					        </small>
+							<small class="text-danger" th:if="${#fields.hasErrors('documentContent')}"
+								th:errors="*{documentContent}">
+							</small>
 
-					    </div>
+						</div>
 
 					</div>
 
@@ -324,12 +322,11 @@
 							</div>
 							<div th:unless="${doc.status == 'DRAFT'}">
 
-							    <a th:href="@{/documents/view/{id}(id=${doc.id})}"
-							       class="btn btn-primary btn-sm">
+								<a th:href="@{/documents/view/{id}(id=${doc.id})}" class="btn btn-primary btn-sm">
 
-							        View
+									View
 
-							    </a>
+								</a>
 
 							</div>
 
@@ -416,8 +413,11 @@
 				);
 
 			}
+			
+			CKEDITOR.replace('documentEditor');
 
 		};
+
 
 	</script>
 </body>

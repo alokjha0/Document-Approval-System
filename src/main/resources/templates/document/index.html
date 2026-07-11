@@ -49,7 +49,8 @@
 
 				<form th:action="${documentDto.id == null}
 			       ? @{/documents/save}
-			       : @{/documents/update/{id}(id=${documentDto.id})}" th:object="${documentDto}" method="post">
+			       : @{/documents/update/{id}(id=${documentDto.id})}" th:object="${documentDto}" method="post"
+					enctype="multipart/form-data">
 
 
 					<div class="row">
@@ -154,44 +155,158 @@
 
 					</div>
 
-					<div class="row">
+					<div class="row" th:if="${documentDto.id == null}">
 
 						<div class="col-md-12 mb-3">
 
-							<label class="form-label">
+							<label class="form-label fw-bold">
 
-								Document Editor
+								Create Document Using
 
 							</label>
+							<div class="form-check">
 
-							<textarea id="documentEditor" class="form-control" rows="12" th:field="*{documentContent}"
-								placeholder="Compose the complete document here...">
+								<input class="form-check-input" type="radio" id="editorOption"
+									th:field="*{documentSource}"
+									th:value="${T(com.company.das.common.enums.DocumentSource).EDITOR}">
+
+								<label class="form-check-label" for="editorOption">
+
+									Document Editor
+
+								</label>
+
+							</div>
+
+							<div class="form-check">
+
+								<input class="form-check-input" type="radio" id="uploadOption"
+									th:field="*{documentSource}"
+									th:value="${T(com.company.das.common.enums.DocumentSource).FILE_UPLOAD}">
+
+								<label class="form-check-label" for="uploadOption">
+
+									<span th:text="${documentDto.id == null}
+									          ? 'Upload PDF'
+									          : 'Replace PDF'">
+									</span>
+
+								</label>
+
+							</div>
+
+						</div>
+				</div>
+				
+
+			
+
+			<div id="editorSection" th:style="${documentDto.documentSource == T(com.company.das.common.enums.DocumentSource).FILE_UPLOAD}
+					                ? 'display:none;'
+					                : 'display:block;'">
+
+				<div class="row">
+
+					<div class="col-md-12 mb-3">
+
+						<label class="form-label">
+
+							Document Editor
+
+						</label>
+
+						<textarea id="documentEditor" class="form-control" rows="12" th:field="*{documentContent}"
+							placeholder="Compose the complete document here...">
 							</textarea>
 
-							<small class="text-danger" th:if="${#fields.hasErrors('documentContent')}"
-								th:errors="*{documentContent}">
-							</small>
+						<small class="text-danger" th:if="${#fields.hasErrors('documentContent')}"
+							th:errors="*{documentContent}">
+						</small>
+
+					</div>
+
+				</div>
+			</div>
+
+
+			<div id="uploadSection" th:style="${documentDto.documentSource == T(com.company.das.common.enums.DocumentSource).FILE_UPLOAD}
+					                ? 'display:block;'
+					                : 'display:none;'">
+
+				<div class="row">
+
+					<div class="col-md-12 mb-3">
+
+						<label class="form-label fw-bold">
+
+							Upload PDF
+
+						</label>
+
+						<!-- Only while editing -->
+						<div th:if="${documentDto.id != null}">
+
+							<div class="alert alert-info d-flex justify-content-between align-items-center">
+
+								<span>
+
+									Current PDF is available.
+									Upload a new PDF only if you want to replace it.
+
+								</span>
+
+								<a th:href="@{/documents/{id}/pdf/view(id=${documentDto.id})}"
+								   target="_blank"
+								   class="btn btn-sm btn-outline-primary">
+
+								    View
+
+								</a>
+
+							</div>
+
+						</div>
+
+						<label class="form-label">
+
+							<span th:text="${documentDto.id == null}
+					                    ? 'Choose PDF'
+					                    : 'Replace PDF (Optional)'">
+							</span>
+
+						</label>
+
+						<input type="file" id="uploadedPdf" class="form-control" accept=".pdf"
+							th:field="*{uploadedFile}">
+
+						<div class="form-text">
+
+							Only PDF files are allowed.
 
 						</div>
 
 					</div>
 
+				</div>
 
-					<div class="col-md-2 d-flex align-items-end">
+		</div>
+		<div class="row">
+			<div class="col-md-2 d-flex align-items-end">
 
-						<button type="submit" class="btn btn-primary w-100">
+				<button type="submit" class="btn btn-primary w-100">
 
-							Save Draft
+					Save Draft
 
-						</button>
-
-					</div>
+				</button>
 
 			</div>
 
-			</form>
-
 		</div>
+
+		</form>
+
+	</div>
+	</div>
 
 	</div>
 
@@ -396,6 +511,24 @@
 
 			});
 
+
+			function toggleDocumentSource() {
+
+			    const editorOption = document.getElementById("editorOption");
+
+			    if (!editorOption) {
+			        return;
+			    }
+
+			    const editorSelected = editorOption.checked;
+
+			    document.getElementById("editorSection").style.display =
+			        editorSelected ? "block" : "none";
+
+			    document.getElementById("uploadSection").style.display =
+			        editorSelected ? "none" : "block";
+			}
+
 		window.onload = function () {
 
 			let departmentId =
@@ -413,8 +546,20 @@
 				);
 
 			}
-			
+
 			CKEDITOR.replace('documentEditor');
+
+			toggleDocumentSource();
+
+			const editorOption = document.getElementById("editorOption");
+			const uploadOption = document.getElementById("uploadOption");
+
+			if (editorOption && uploadOption) {
+
+			    editorOption.addEventListener("change", toggleDocumentSource);
+			    uploadOption.addEventListener("change", toggleDocumentSource);
+
+			}
 
 		};
 

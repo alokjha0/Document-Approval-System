@@ -1,5 +1,6 @@
 package com.company.das.document.controller;
 
+import com.company.das.common.enums.DocumentSource;
 import com.company.das.department.service.DepartmentService;
 import com.company.das.document.dto.DocumentDto;
 import com.company.das.document.service.DocumentService;
@@ -27,7 +28,10 @@ public class DocumentController {
 	@GetMapping
 	public String documentPage(Model model, Authentication authentication) {
 
-		model.addAttribute("documentDto", new DocumentDto());
+		DocumentDto documentDto = new DocumentDto();
+		documentDto.setDocumentSource(DocumentSource.EDITOR);
+
+		model.addAttribute("documentDto", documentDto);
 
 		model.addAttribute("departments", departmentService.getAllDepartments());
 
@@ -79,6 +83,8 @@ public class DocumentController {
 			Authentication authentication, Model model) {
 
 		if (result.hasErrors()) {
+			
+			result.getAllErrors().forEach(System.out::println);
 
 			model.addAttribute("departments", departmentService.getAllDepartments());
 
@@ -94,6 +100,7 @@ public class DocumentController {
 
 	@GetMapping("/respond/{id}")
 	public String respondToInfoRequest(@PathVariable Long id, Authentication authentication, Model model) {
+	
 
 		model.addAttribute("documentDto", documentService.getDocumentDetails(id, authentication.getName()));
 

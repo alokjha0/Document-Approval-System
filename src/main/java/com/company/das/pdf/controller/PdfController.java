@@ -31,5 +31,21 @@ public class PdfController {
 		return pdfService.downloadPdf(documentId);
 
 	}
+	
+	@GetMapping("/pdf/version/{versionId}/view")
+	public ResponseEntity<Resource> viewPdfByVersion(
+	        @PathVariable Long versionId) {
+
+	    return pdfService.viewPdfByVersion(versionId);
+
+	}
+
+	@GetMapping("/pdf/version/{versionId}/download")
+	public ResponseEntity<Resource> downloadPdfByVersion(
+	        @PathVariable Long versionId) {
+
+	    return pdfService.downloadPdfByVersion(versionId);
+
+	}
 
 }

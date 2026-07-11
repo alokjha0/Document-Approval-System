@@ -22,6 +22,7 @@ import com.company.das.document.repository.DocumentRepository;
 import com.company.das.document.service.DocumentService;
 import com.company.das.documentversion.entity.DocumentVersion;
 import com.company.das.documentversion.service.DocumentVersionService;
+import com.company.das.pdf.service.PdfService;
 import com.company.das.user.entity.User;
 import com.company.das.user.repository.UserRepository;
 import com.company.das.workflow.entity.WorkflowInstance;
@@ -63,6 +64,8 @@ public class DocumentServiceImpl implements DocumentService {
 	private final DocumentCommentService documentCommentService;
 
 	private final DocumentVersionService documentVersionService;
+	
+	private final PdfService pdfService;
 
 	@Override
 	public void createDocument(DocumentDto documentDto, String loggedInUserEmail) {
@@ -75,14 +78,48 @@ public class DocumentServiceImpl implements DocumentService {
 
 		Application application = applicationRepository.findById(documentDto.getApplicationId())
 				.orElseThrow(() -> new ResourceNotFoundException("Application not found"));
+		
+		if (documentDto.getDocumentSource() == DocumentSource.EDITOR) {
+
+		    if (documentDto.getDocumentContent() == null
+		            || documentDto.getDocumentContent().isBlank()) {
+
+		        throw new RuntimeException("Document content is required.");
+
+		    }
+
+		} else {
+
+		    if (documentDto.getUploadedFile() == null
+		            || documentDto.getUploadedFile().isEmpty()) {
+
+		        throw new RuntimeException("Please upload a PDF file.");
+
+		    }
+
+		}
 
 		String documentNumber = generateDocumentNumber();
 
 		Document document = Document.builder().documentNumber(documentNumber).title(documentDto.getTitle())
-				.description(documentDto.getDescription()).documentContent(documentDto.getDocumentContent())
+				.description(documentDto.getDescription()).documentContent(documentDto.getDocumentContent()).documentSource(documentDto.getDocumentSource())
 				.department(department).application(application).status(DocumentStatus.DRAFT).owner(owner).build();
 
 		document = documentRepository.save(document);
+		
+		if (document.getDocumentSource() == DocumentSource.FILE_UPLOAD) {
+
+		    String uploadedPdfPath = pdfService.storeUploadedPdf(
+		            document,
+		            documentDto.getUploadedFile(),
+		            0
+		    );
+
+		    document.setUploadedPdfPath(uploadedPdfPath);
+
+		    documentRepository.save(document);
+
+		}
 
 		AuditLog auditLog = AuditLog.builder().documentId(document.getId()).action(AuditAction.DOCUMENT_CREATED)
 				.toStatus(DocumentStatus.DRAFT).performedBy(owner).remarks("Document created as draft").build();
@@ -146,6 +183,8 @@ public class DocumentServiceImpl implements DocumentService {
 		}
 
 		DocumentVersion documentVersion = documentVersionService.createVersion(document);
+		
+		
 
 		WorkflowInstance workflowInstance = WorkflowInstance.builder().document(document)
 				.status(WorkflowStatus.IN_PROGRESS).currentStage(firstStep.getStage())
@@ -194,7 +233,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 		return DocumentDto.builder().id(document.getId()).documentNumber(document.getDocumentNumber())
 				.title(document.getTitle()).description(document.getDescription())
-				.documentContent(document.getDocumentContent()).departmentId(document.getDepartment().getId())
+				.documentContent(document.getDocumentContent()).documentSource(document.getDocumentSource()).departmentId(document.getDepartment().getId())
 				.applicationId(document.getApplication().getId())
 				.applicationName(document.getApplication().getApplicationName())
 				.departmentName(document.getDepartment().getDepartmentName()).status(document.getStatus().name())
@@ -230,11 +269,29 @@ public class DocumentServiceImpl implements DocumentService {
 
 		document.setDescription(documentDto.getDescription());
 
-		document.setDocumentContent(documentDto.getDocumentContent());
-
 		document.setDepartment(department);
 
 		document.setApplication(application);
+
+		if (document.getDocumentSource() == DocumentSource.EDITOR) {
+
+			document.setDocumentContent(documentDto.getDocumentContent());
+
+		} else {
+
+			if (documentDto.getUploadedFile() != null
+					&& !documentDto.getUploadedFile().isEmpty()) {
+
+				String uploadedPdfPath = pdfService.storeUploadedPdf(
+						document,
+						documentDto.getUploadedFile(),
+						0);
+
+				document.setUploadedPdfPath(uploadedPdfPath);
+
+			}
+
+		}
 
 		documentDto.setApplicationId(document.getApplication().getId());
 
@@ -267,7 +324,25 @@ public class DocumentServiceImpl implements DocumentService {
 
 		document.setDescription(documentDto.getDescription());
 
-		document.setDocumentContent(documentDto.getDocumentContent());
+		if (document.getDocumentSource() == DocumentSource.EDITOR) {
+
+			document.setDocumentContent(documentDto.getDocumentContent());
+
+		} else {
+
+			if (documentDto.getUploadedFile() != null
+					&& !documentDto.getUploadedFile().isEmpty()) {
+
+				String uploadedPdfPath = pdfService.storeUploadedPdf(
+						document,
+						documentDto.getUploadedFile(),
+						0);
+
+				document.setUploadedPdfPath(uploadedPdfPath);
+
+			}
+
+		}
 
 		document.setStatus(DocumentStatus.RESUBMITTED);
 
@@ -346,7 +421,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 		DocumentDto dto = DocumentDto.builder().id(document.getId()).documentNumber(document.getDocumentNumber())
 				.title(document.getTitle()).description(document.getDescription())
-				.documentContent(document.getDocumentContent()).status(document.getStatus().name())
+				.documentContent(document.getDocumentContent()).documentSource(document.getDocumentSource()).status(document.getStatus().name())
 				.departmentName(document.getDepartment().getDepartmentName())
 				.applicationName(document.getApplication().getApplicationName()).build();
 

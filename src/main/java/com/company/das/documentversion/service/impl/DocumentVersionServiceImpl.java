@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.company.das.common.enums.DocumentSource;
 import com.company.das.document.entity.Document;
 import com.company.das.documentversion.entity.DocumentVersion;
 import com.company.das.documentversion.repository.DocumentVersionRepository;
@@ -37,7 +38,23 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
 		}
 
-		String pdfPath = pdfService.generateDocumentPdf(document, nextVersion);
+		String pdfPath;
+
+		if (document.getDocumentSource() == DocumentSource.EDITOR) {
+
+		    pdfPath =
+		            pdfService.generateDocumentPdf(
+		                    document,
+		                    nextVersion);
+
+		} else {
+
+		    pdfPath =
+		            pdfService.finalizeUploadedDraft(
+		                    document,
+		                    nextVersion);
+
+		}
 
 		documentVersionRepository.findByDocumentAndIsCurrentTrue(document).ifPresent(current -> {
 

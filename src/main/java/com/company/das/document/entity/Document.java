@@ -1,6 +1,7 @@
 package com.company.das.document.entity;
 
 import com.company.das.application.entity.Application;
+import com.company.das.common.enums.DocumentSource;
 import com.company.das.common.enums.DocumentStatus;
 import com.company.das.department.entity.Department;
 import com.company.das.user.entity.User;
@@ -33,6 +34,13 @@ public class Document {
 
 	@Column(columnDefinition = "TEXT", nullable = false)
 	private String documentContent;
+	
+	@Column(name = "uploaded_pdf_path")
+	private String uploadedPdfPath;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable =false)
+	private DocumentSource documentSource;
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)

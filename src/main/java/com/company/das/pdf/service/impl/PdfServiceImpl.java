@@ -2,10 +2,16 @@ package com.company.das.pdf.service.impl;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+
+import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.company.das.common.enums.DocumentSource;
+import com.company.das.common.enums.DocumentStatus;
 import com.company.das.common.exception.ResourceNotFoundException;
 import com.company.das.document.entity.Document;
 import com.company.das.document.repository.DocumentRepository;
@@ -42,13 +48,48 @@ public class PdfServiceImpl implements PdfService {
 	@Value("${app.pdf.storage-path}")
 	private String storagePath;
 
-	private DocumentVersion getCurrentDocumentVersion(Long documentId) {
+	/*
+	 * private DocumentVersion getCurrentDocumentVersion(Long documentId) {
+	 * 
+	 * Document document = documentRepository.findById(documentId) .orElseThrow(()
+	 * -> new ResourceNotFoundException("Document not found"));
+	 * 
+	 * return documentVersionRepository.findByDocumentAndIsCurrentTrue(document)
+	 * .orElseThrow(() -> new
+	 * ResourceNotFoundException("Current document version not found"));
+	 * 
+	 * }
+	 */
+	
+	private File getPdfFile(Long documentId) {
 
 		Document document = documentRepository.findById(documentId)
 				.orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
-		return documentVersionRepository.findByDocumentAndIsCurrentTrue(document)
+		// Draft uploaded PDF
+		if (document.getDocumentSource() == DocumentSource.FILE_UPLOAD
+		        && document.getUploadedPdfPath() != null) {
+
+		    return new File(document.getUploadedPdfPath());
+
+		}
+
+		// Existing versioned PDF
+		DocumentVersion version = documentVersionRepository
+				.findByDocumentAndIsCurrentTrue(document)
 				.orElseThrow(() -> new ResourceNotFoundException("Current document version not found"));
+
+		return new File(version.getPdfPath());
+	}
+	
+	private File getPdfFileByVersion(Long versionId) {
+
+	    DocumentVersion version = documentVersionRepository
+	            .findById(versionId)
+	            .orElseThrow(() ->
+	                    new ResourceNotFoundException("Document version not found"));
+
+	    return new File(version.getPdfPath());
 
 	}
 
@@ -347,15 +388,146 @@ public class PdfServiceImpl implements PdfService {
 			throw new RuntimeException("Unable to generate PDF", e);
 		}
 	}
+	
+	
+	@Override
+	public String storeUploadedPdf(Document document,
+	                               MultipartFile file,
+	                               Integer versionNumber) {
 
+	    try {
+
+	        if (file == null || file.isEmpty()) {
+
+	            throw new RuntimeException("Please select a PDF file.");
+
+	        }
+
+	        if (!"application/pdf".equalsIgnoreCase(file.getContentType())) {
+
+	            throw new RuntimeException("Only PDF files are allowed.");
+
+	        }
+
+	        String documentFolder =
+	                storagePath + File.separator + document.getDocumentNumber();
+
+	        File folder = new File(documentFolder);
+
+	        if (!folder.exists()) {
+
+	            folder.mkdirs();
+
+	        }
+
+	        String pdfPath;
+
+	        if (versionNumber == 0) {
+
+	            pdfPath = documentFolder
+	                    + File.separator
+	                    + "draft.pdf";
+
+	        } else {
+
+	            pdfPath = documentFolder
+	                    + File.separator
+	                    + "version-" + versionNumber + ".pdf";
+
+	        }
+
+	        Files.copy(
+	                file.getInputStream(),
+	                Path.of(pdfPath),
+	                StandardCopyOption.REPLACE_EXISTING
+	        );
+
+	        return pdfPath;
+
+	    } catch (IOException e) {
+
+	        throw new RuntimeException("Unable to store uploaded PDF.", e);
+
+	    }
+
+	}
+
+	@Override
+	public String finalizeUploadedDraft(Document document,
+	                                    Integer versionNumber) {
+
+	    try {
+
+	        if (document.getUploadedPdfPath() == null) {
+
+	            throw new RuntimeException("Draft PDF not found.");
+
+	        }
+
+	        File draftFile = new File(document.getUploadedPdfPath());
+
+	        if (!draftFile.exists()) {
+
+	            throw new RuntimeException("Draft PDF does not exist.");
+
+	        }
+
+	        String documentFolder =
+	                storagePath + File.separator + document.getDocumentNumber();
+
+	        String versionPdfPath =
+	                documentFolder
+	                        + File.separator
+	                        + "version-" + versionNumber + ".pdf";
+
+	        Files.copy(
+	                draftFile.toPath(),
+	                Path.of(versionPdfPath),
+	                StandardCopyOption.REPLACE_EXISTING);
+
+	        return versionPdfPath;
+
+	    } catch (IOException e) {
+
+	        throw new RuntimeException(
+	                "Unable to finalize uploaded PDF.",
+	                e);
+
+	    }
+
+	}
+	
 	@Override
 	public ResponseEntity<Resource> viewPdf(Long documentId) {
 
 		try {
 
-			DocumentVersion version = getCurrentDocumentVersion(documentId);
+			File file = getPdfFile(documentId);
 
-			File file = new File(version.getPdfPath());
+			if (!file.exists()) {
+				throw new RuntimeException("PDF file not found");
+			}
+
+			ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(file.toPath()));
+
+			return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + file.getName() + "\"")
+					.contentType(MediaType.APPLICATION_PDF).contentLength(file.length()).body(resource);
+
+		} catch (IOException e) {
+
+			throw new RuntimeException("Unable to read PDF file", e);
+
+		}
+
+	}
+	
+	@Override
+	public ResponseEntity<Resource> viewPdfByVersion(Long versionId) {
+
+		try {
+
+			File file = getPdfFileByVersion(versionId);
 
 			if (!file.exists()) {
 				throw new RuntimeException("PDF file not found");
@@ -394,9 +566,32 @@ public class PdfServiceImpl implements PdfService {
 
 		try {
 
-			DocumentVersion version = getCurrentDocumentVersion(documentId);
+			File file = getPdfFile(documentId);
 
-			File file = new File(version.getPdfPath());
+			if (!file.exists()) {
+				throw new RuntimeException("PDF file not found");
+			}
+
+			ByteArrayResource resource = new ByteArrayResource(Files.readAllBytes(file.toPath()));
+
+			return ResponseEntity.ok()
+					.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getName() + "\"")
+					.contentType(MediaType.APPLICATION_PDF).contentLength(file.length()).body(resource);
+
+		} catch (IOException e) {
+
+			throw new RuntimeException("Unable to read PDF file", e);
+
+		}
+
+	}
+	
+	@Override
+	public ResponseEntity<Resource> downloadPdfByVersion(Long versionId) {
+
+		try {
+
+			File file = getPdfFileByVersion(versionId);
 
 			if (!file.exists()) {
 				throw new RuntimeException("PDF file not found");

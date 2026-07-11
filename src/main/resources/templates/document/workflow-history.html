@@ -185,7 +185,7 @@
 							<div class="d-flex gap-2 mt-3">
 
 								<a class="btn btn-outline-primary btn-sm" target="_blank"
-								th:href="@{/documents/{id}/pdf/view(id=${document.id})}">
+								th:href="@{/documents/pdf/version/{versionId}/view(versionId=${history.versionId})}">
 
 									<i class="bi bi-eye"></i>
 
@@ -194,7 +194,7 @@
 								</a>
 
 								<a class="btn btn-outline-success btn-sm"
-									th:href="@{/documents/{id}/pdf/download(id=${document.id})}">
+									th:href="@{/documents/pdf/version/{versionId}/download(versionId=${history.versionId})}">
 
 									<i class="bi bi-download"></i>
 

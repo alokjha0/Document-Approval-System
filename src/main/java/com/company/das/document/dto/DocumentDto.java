@@ -1,6 +1,9 @@
 package com.company.das.document.dto;
 
+import org.springframework.web.multipart.MultipartFile;
+
 import com.company.das.common.enums.CommentType;
+import com.company.das.common.enums.DocumentSource;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -31,8 +34,14 @@ public class DocumentDto {
 	@Size(max = 1000)
 	private String description;
 
-	@NotBlank(message = "Document content is required")
+
 	private String documentContent;
+	
+	private DocumentSource documentSource;
+	
+	private MultipartFile uploadedFile;
+	
+	private String uploadedPdfPath;
 
 	@NotNull(message = "Department is required")
 	private Long departmentId;

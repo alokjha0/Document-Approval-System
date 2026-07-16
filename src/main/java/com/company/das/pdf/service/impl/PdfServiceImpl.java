@@ -48,18 +48,7 @@ public class PdfServiceImpl implements PdfService {
 	@Value("${app.pdf.storage-path}")
 	private String storagePath;
 
-	/*
-	 * private DocumentVersion getCurrentDocumentVersion(Long documentId) {
-	 * 
-	 * Document document = documentRepository.findById(documentId) .orElseThrow(()
-	 * -> new ResourceNotFoundException("Document not found"));
-	 * 
-	 * return documentVersionRepository.findByDocumentAndIsCurrentTrue(document)
-	 * .orElseThrow(() -> new
-	 * ResourceNotFoundException("Current document version not found"));
-	 * 
-	 * }
-	 */
+	
 	
 	private File getPdfFile(Long documentId) {
 

@@ -20,7 +20,6 @@ public class GlobalExceptionHandler {
 
 		// Get previous URL (where error occurred)
 		String referer = request.getHeader("Referer");
-		
 
 		// Fallback if null
 		if (referer == null || referer.isEmpty()) {
@@ -29,30 +28,21 @@ public class GlobalExceptionHandler {
 
 		return new RedirectView(referer);
 	}
-	
+
 	@ExceptionHandler(MaxUploadSizeExceededException.class)
-	public String handleMaxUploadSizeExceededException(
-	        MaxUploadSizeExceededException ex,
-	        RedirectAttributes redirectAttributes) {
+	public String handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex,
+			RedirectAttributes redirectAttributes) {
 
-	    redirectAttributes.addFlashAttribute(
-	            "error",
-	            "Maximum file size allowed is 1 MB.");
+		redirectAttributes.addFlashAttribute("error", "Maximum file size allowed is 20 MB.");
 
-	    return "redirect:/documents";
+		return "redirect:/documents";
 	}
-	
+
 	@ExceptionHandler(MultipartException.class)
-	public String handleMultipartException(
-	        MultipartException ex,
-	        RedirectAttributes redirectAttributes) {
+	public String handleMultipartException(MultipartException ex, RedirectAttributes redirectAttributes) {
 
-	    redirectAttributes.addFlashAttribute(
-	            "error",
-	            "Uploaded file exceeds the maximum allowed size (10 MB).");
+		redirectAttributes.addFlashAttribute("error", "Uploaded file exceeds the maximum allowed size (20 MB).");
 
-	    return "redirect:/documents";
+		return "redirect:/documents";
 	}
 }
-
-

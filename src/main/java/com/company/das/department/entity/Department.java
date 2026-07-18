@@ -22,6 +22,7 @@ public class Department {
 	private String departmentName;
 
 	@Column(nullable = false)
+	@Builder.Default
 	private Boolean isDeleted = false;
 
 	private LocalDateTime createdAt;

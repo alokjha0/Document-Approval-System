@@ -28,6 +28,7 @@ public class ApplicationHierarchyMapping {
 	private Hierarchy hierarchy;
 
 	@Column(nullable = false)
+	@Builder.Default
 	private Boolean isDeleted = false;
 
 	private LocalDateTime createdAt;

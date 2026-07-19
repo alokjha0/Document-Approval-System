@@ -11,7 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.company.das.common.enums.DocumentSource;
-import com.company.das.common.enums.DocumentStatus;
+// import com.company.das.common.enums.DocumentStatus;
 import com.company.das.common.exception.ResourceNotFoundException;
 import com.company.das.document.entity.Document;
 import com.company.das.document.repository.DocumentRepository;

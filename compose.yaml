@@ -8,6 +8,7 @@ services:
     restart: unless-stopped
 
     environment:
+      TZ: Asia/Kolkata
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -29,6 +30,7 @@ services:
       - postgres
 
     environment:
+       TZ: Asia/Kolkata
        DB_URL: ${DB_URL}
        DB_USERNAME: ${DB_USERNAME}
        DB_PASSWORD: ${DB_PASSWORD}

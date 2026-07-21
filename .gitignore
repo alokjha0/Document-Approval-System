@@ -5,7 +5,7 @@ target/
 !**/src/test/**/target/
 
 .env
-uploads/
+uploads/*
 *.backup
 *.sql
 

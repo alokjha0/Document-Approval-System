@@ -1,26 +1,42 @@
 stages:
   - build
-  - push
+  - deploy
 
 variables:
-  IMAGE_NAME: alokjha1/document-approval-system
+  IMAGE_NAME: $IMAGE_NAME
 
 build-image:
+
   stage: build
 
   tags:
     - ec2
 
   script:
-    - echo "Building Docker Image..."
+
+    - echo "Building Docker Image"
+
     - docker build -t $IMAGE_NAME:latest .
 
-push-image:
-  stage: push
+    - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+
+    - docker push $IMAGE_NAME:latest
+
+deploy:
+
+  stage: deploy
 
   tags:
     - ec2
 
   script:
-    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-    - docker push $IMAGE_NAME:latest
+
+    - echo "Deploying Latest Image"
+
+    - cd /home/ubuntu/apps/das
+
+    - docker compose pull
+
+    - docker compose up -d
+
+    - docker image prune -f

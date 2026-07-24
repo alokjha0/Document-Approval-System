@@ -20,7 +20,7 @@ services:
       - postgres-data:/var/lib/postgresql
 
   das-app:
-    image: das-app:v1
+    image: alokjha1/document-approval-system:latest
 
     container_name: das-app
 

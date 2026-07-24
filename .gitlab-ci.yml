@@ -16,3 +16,4 @@ build-image:
     - docker info
     - docker build -t das-test:latest .
     - docker images
+    

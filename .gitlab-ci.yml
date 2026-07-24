@@ -1,5 +1,9 @@
 stages:
   - build
+  - push
+
+variables:
+  IMAGE_NAME: alokjha1/document-approval-system
 
 build-image:
   stage: build
@@ -8,12 +12,15 @@ build-image:
     - ec2
 
   script:
-    - echo "Running on EC2 Self Hosted Runner"
-    - whoami
-    - pwd
-    - hostname
-    - docker version
-    - docker info
-    - docker build -t das-test:latest .
-    - docker images
-    
+    - echo "Building Docker Image..."
+    - docker build -t $IMAGE_NAME:latest .
+
+push-image:
+  stage: push
+
+  tags:
+    - ec2
+
+  script:
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+    - docker push $IMAGE_NAME:latest

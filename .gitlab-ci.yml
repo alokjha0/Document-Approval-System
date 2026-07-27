@@ -28,6 +28,9 @@ deploy:
   tags:
     - ec2
 
+  only:
+    - main
+
   script:
 
     - echo "Deploying Latest Image"

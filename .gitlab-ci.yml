@@ -8,6 +8,9 @@ build-image:
   tags:
     - ec2
 
+  only:
+    - main
+
   script:
 
     - echo "Building Docker Image"

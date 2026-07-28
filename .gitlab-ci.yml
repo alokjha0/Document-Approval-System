@@ -1,24 +1,38 @@
 stages:
   - build
+  - push
   - deploy
 
 build-image:
 
   stage: build
+
   tags:
     - ec2
 
-  only:
-    - main
+  script:
+    - echo "Building Docker Image"
+    - docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA .
+
+push-image:
+
+  stage: push
+
+  tags:
+    - ec2
+
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
   script:
-
-    - echo "Building Docker Image"
-
-    - docker build -t $IMAGE_NAME:latest .
-
+    - echo "Logging into Docker Hub"
     - echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
 
+    - echo "Tagging image"
+    - docker tag $IMAGE_NAME:$CI_COMMIT_SHORT_SHA $IMAGE_NAME:latest
+
+    - echo "Pushing Docker Images"
+    - docker push $IMAGE_NAME:$CI_COMMIT_SHORT_SHA
     - docker push $IMAGE_NAME:latest
 
 deploy:
@@ -28,11 +42,10 @@ deploy:
   tags:
     - ec2
 
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
 
   script:
-
     - echo "Deploying Latest Image"
 
     - cd /home/ubuntu/apps/das

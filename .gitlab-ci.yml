@@ -46,7 +46,11 @@ deploy:
     - if: '$CI_COMMIT_BRANCH == "main"'
 
   script:
-    - echo "Deploying Latest Image"
+    - echo "Deploying Latest Version"
+
+    - cp compose.yaml /home/ubuntu/apps/das/
+    
+    - cp nginx/default.conf /home/ubuntu/apps/das/nginx/
 
     - cd /home/ubuntu/apps/das
 
